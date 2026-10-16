@@ -1,0 +1,51 @@
+import { getToken } from './session'
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? ''
+
+export class ApiError extends Error {
+  readonly status: number
+  readonly fieldErrors: Record<string, string>
+
+  constructor(status: number, message: string, fieldErrors: Record<string, string> = {}) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.fieldErrors = fieldErrors
+  }
+}
+
+type ApiOptions = Omit<RequestInit, 'body' | 'headers'> & {
+  body?: unknown
+  headers?: Record<string, string>
+}
+
+export async function apiFetch<T>(path: string, { body, headers, ...init }: ApiOptions = {}): Promise<T> {
+  const token = getToken()
+  let response: Response
+  try {
+    response = await fetch(BASE_URL + path, {
+      ...init,
+      headers: {
+        Accept: 'application/json',
+        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...headers,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch {
+    throw new ApiError(0, 'No se pudo conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.')
+  }
+
+  if (response.status === 204) return undefined as T
+
+  const data = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      data?.message ?? 'Ocurrió un error inesperado. Inténtalo nuevamente.',
+      data?.fieldErrors ?? {},
+    )
+  }
+  return data as T
+}
