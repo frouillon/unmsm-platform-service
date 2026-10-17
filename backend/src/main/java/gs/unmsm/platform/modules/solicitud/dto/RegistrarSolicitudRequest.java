@@ -19,27 +19,29 @@ public record RegistrarSolicitudRequest(
         @Size(min = 20, max = 2000, message = "La descripción debe tener entre 20 y 2000 caracteres.")
         String descripcion,
 
-        @NotBlank(message = "Indica el pabellón.")
+        /* La ubicación es obligatoria solo si la categoría lo exige; lo valida SolicitudService. */
         @Size(max = 100, message = "El pabellón admite hasta 100 caracteres.")
         String pabellon,
 
-        @NotBlank(message = "Indica el piso o nivel.")
         @Size(max = 50, message = "El piso o nivel admite hasta 50 caracteres.")
         String nivel,
 
-        @NotBlank(message = "Indica el aula o ambiente.")
         @Size(max = 100, message = "El aula o ambiente admite hasta 100 caracteres.")
         String ambiente
 ) {
     public RegistrarSolicitudRequest {
         asunto = strip(asunto);
         descripcion = strip(descripcion);
-        pabellon = strip(pabellon);
-        nivel = strip(nivel);
-        ambiente = strip(ambiente);
+        pabellon = blankToNull(pabellon);
+        nivel = blankToNull(nivel);
+        ambiente = blankToNull(ambiente);
     }
 
     private static String strip(String valor) {
         return valor == null ? null : valor.strip();
+    }
+
+    private static String blankToNull(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.strip();
     }
 }

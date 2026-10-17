@@ -1,5 +1,24 @@
-import { apiFetch } from '../../lib/api'
-import type { Categoria, NuevaSolicitud, PrioridadCatalogo, SolicitudRegistrada } from './types'
+import { apiBlob, apiFetch } from '../../lib/api'
+import type {
+  Categoria,
+  NuevaSolicitud,
+  PrioridadCatalogo,
+  SolicitudDetalle,
+  SolicitudRegistrada,
+  SolicitudResumen,
+} from './types'
+
+export function fetchMisSolicitudes(): Promise<SolicitudResumen[]> {
+  return apiFetch('/api/solicitudes/mias')
+}
+
+export function fetchSolicitud(codigo: string): Promise<SolicitudDetalle> {
+  return apiFetch(`/api/solicitudes/${encodeURIComponent(codigo)}`)
+}
+
+export function fetchEvidencia(codigo: string, evidenciaId: number): Promise<Blob> {
+  return apiBlob(`/api/solicitudes/${encodeURIComponent(codigo)}/evidencias/${evidenciaId}`)
+}
 
 export function fetchCategorias(): Promise<Categoria[]> {
   return apiFetch('/api/catalogos/categorias')

@@ -55,9 +55,13 @@ public class DataSeeder implements ApplicationRunner {
     @Value("${app.seed.demo-password}")
     private String demoPassword;
 
-    private record CategoriaSeed(String nombre, String area) {}
+    private record CategoriaSeed(String nombre, String area, boolean requiereUbicacion) {}
     private record PrioridadSeed(String nombre, int slaDias, boolean diasHabiles) {}
-    private record UsuarioSeed(String nombres, String rol, String area, boolean activo) {}
+    private record UsuarioSeed(String nombres, String rol, String area, boolean activo, String password) {
+        private UsuarioSeed(String nombres, String rol, String area, boolean activo) {
+            this(nombres, rol, area, activo, null);
+        }
+    }
     private record ResponsableSeed(String area, String nombres) {}
 
     @Override
@@ -70,11 +74,11 @@ public class DataSeeder implements ApplicationRunner {
                 .forEach(this::area);
 
         List.of(
-                new CategoriaSeed("Mantenimiento", AREA_MANTENIMIENTO),
-                new CategoriaSeed("Infraestructura", AREA_INFRAESTRUCTURA),
-                new CategoriaSeed("Soporte informático", AREA_TI),
-                new CategoriaSeed("Administrativa", AREA_SECRETARIA),
-                new CategoriaSeed("Reserva de ambientes", AREA_SERVICIOS)
+                new CategoriaSeed("Mantenimiento", AREA_MANTENIMIENTO, true),
+                new CategoriaSeed("Infraestructura", AREA_INFRAESTRUCTURA, true),
+                new CategoriaSeed("Soporte informático", AREA_TI, false),
+                new CategoriaSeed("Administrativa", AREA_SECRETARIA, false),
+                new CategoriaSeed("Reserva de ambientes", AREA_SERVICIOS, true)
         ).forEach(this::categoria);
 
         List.of(
@@ -90,6 +94,8 @@ public class DataSeeder implements ApplicationRunner {
             estado(estados.get(i), i + 1);
         }
 
+        corregirCorreo("kenner.tataja@unmsm.edu.pe", "Kenner Tataje");
+
         List.of(
                 new UsuarioSeed("Andrea Mendoza", RolNombre.ESTUDIANTE, null, true),
                 new UsuarioSeed("Luis Paredes", RolNombre.ESTUDIANTE, null, true),
@@ -102,7 +108,13 @@ public class DataSeeder implements ApplicationRunner {
                 new UsuarioSeed("Rosa Salinas", RolNombre.TECNICO, AREA_SECRETARIA, true),
                 new UsuarioSeed("Pedro Salas", RolNombre.TECNICO, AREA_SERVICIOS, true),
                 new UsuarioSeed("Lucía Ramos", RolNombre.SUPERVISOR, AREA_SERVICIOS, true),
-                new UsuarioSeed("Marcos Vidal", RolNombre.ADMINISTRADOR, AREA_TI, true)
+                new UsuarioSeed("Marcos Vidal", RolNombre.ADMINISTRADOR, AREA_TI, true),
+                new UsuarioSeed("Max Astuhuamán", RolNombre.ESTUDIANTE, null, true, "unmsm"),
+                new UsuarioSeed("Favio Rouillon", RolNombre.TECNICO, AREA_INFRAESTRUCTURA, true, "unmsm"),
+                new UsuarioSeed("Ronald Munayco", RolNombre.SUPERVISOR, AREA_MANTENIMIENTO, true, "unmsm"),
+                new UsuarioSeed("Diego Guzmán", RolNombre.ADMINISTRADOR, AREA_SECRETARIA, true, "unmsm"),
+                new UsuarioSeed("Kenner Tataje", RolNombre.TECNICO, AREA_TI, true, "unmsm"),
+                new UsuarioSeed("Eduardo Levis", RolNombre.ESTUDIANTE, null, true, "unmsm")
         ).forEach(this::usuario);
 
         List.of(
@@ -127,9 +139,15 @@ public class DataSeeder implements ApplicationRunner {
     }
 
     private void categoria(CategoriaSeed seed) {
-        if (categoriaRepository.findByNombre(seed.nombre()).isEmpty()) {
-            categoriaRepository.save(Categoria.builder().nombre(seed.nombre()).area(area(seed.area())).build());
-        }
+        categoriaRepository.findByNombre(seed.nombre()).ifPresentOrElse(
+                existente -> {
+                    // Solo completa categorías creadas antes de existir la columna; respeta cambios posteriores.
+                    if (existente.getRequiereUbicacion() == null) {
+                        existente.setRequiereUbicacion(seed.requiereUbicacion());
+                    }
+                },
+                () -> categoriaRepository.save(Categoria.builder().nombre(seed.nombre()).area(area(seed.area()))
+                        .requiereUbicacion(seed.requiereUbicacion()).build()));
     }
 
     private void prioridad(PrioridadSeed seed) {
@@ -145,6 +163,13 @@ public class DataSeeder implements ApplicationRunner {
         }
     }
 
+    private void corregirCorreo(String correoAnterior, String nombres) {
+        usuarioRepository.findByCorreoInstitucional(correoAnterior).ifPresent(usuario -> {
+            usuario.setNombres(nombres);
+            usuario.setCorreoInstitucional(correoInstitucional(nombres));
+        });
+    }
+
     private void usuario(UsuarioSeed seed) {
         String correo = correoInstitucional(seed.nombres());
         if (usuarioRepository.findByCorreoInstitucional(correo).isPresent()) {
@@ -153,7 +178,7 @@ public class DataSeeder implements ApplicationRunner {
         usuarioRepository.save(Usuario.builder()
                 .nombres(seed.nombres())
                 .correoInstitucional(correo)
-                .passwordHash(passwordEncoder.encode(demoPassword))
+                .passwordHash(passwordEncoder.encode(seed.password() == null ? demoPassword : seed.password()))
                 .rol(rol(seed.rol()))
                 .area(seed.area() == null ? null : area(seed.area()))
                 .activo(seed.activo())

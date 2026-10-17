@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Button } from '../components/ui/Button'
 import { Field, FieldError } from '../components/ui/Field'
 import { Icon } from '../components/ui/Icon'
 import { inputClass } from '../components/ui/inputClass'
+import { LoadError } from '../components/ui/LoadError'
 import { PageHeader } from '../components/ui/PageHeader'
 import { EvidenciasInput } from '../features/solicitudes/components/EvidenciasInput'
 import { PrioridadSelector } from '../features/solicitudes/components/PrioridadSelector'
@@ -39,6 +40,8 @@ const describedBy = (campo: string, error?: string, hint = false) =>
 
 export function NuevaSolicitudPage() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const categoriaInicial = params.get('categoria')
   const [catalogos, setCatalogos] = useState<Catalogos | null>(null)
   const [catalogoError, setCatalogoError] = useState<string | null>(null)
   const [intento, setIntento] = useState(0)
@@ -58,7 +61,12 @@ export function NuevaSolicitudPage() {
         if (!vigente) return
         setCatalogos({ categorias, prioridades })
         const media = prioridades.find((p) => p.nombre === 'Media') ?? prioridades[0]
-        setDatos((d) => (d.prioridadId == null && media ? { ...d, prioridadId: media.id } : d))
+        const sugerida = categorias.find((c) => c.nombre === categoriaInicial)
+        setDatos((d) => ({
+          ...d,
+          prioridadId: d.prioridadId ?? media?.id ?? null,
+          categoriaId: d.categoriaId ?? sugerida?.id ?? null,
+        }))
       })
       .catch((error: unknown) => {
         if (vigente) setCatalogoError(error instanceof ApiError ? error.message : 'No se pudo cargar el formulario.')
@@ -66,12 +74,17 @@ export function NuevaSolicitudPage() {
     return () => {
       vigente = false
     }
-  }, [intento])
+  }, [intento, categoriaInicial])
+
+  const requiereUbicacion = (d: NuevaSolicitud) =>
+    catalogos?.categorias.find((c) => c.id === d.categoriaId)?.requiereUbicacion ?? false
 
   const actualizar = <K extends keyof NuevaSolicitud>(campo: K, valor: NuevaSolicitud[K]) => {
     const siguiente = { ...datos, [campo]: valor }
     setDatos(siguiente)
-    if (enviado) setErrores((prev) => ({ ...validarSolicitud(siguiente), evidencias: prev.evidencias }))
+    if (enviado) {
+      setErrores((prev) => ({ ...validarSolicitud(siguiente, requiereUbicacion(siguiente)), evidencias: prev.evidencias }))
+    }
   }
 
   const enfocarPrimerError = (encontrados: ErroresSolicitud) => {
@@ -83,7 +96,7 @@ export function NuevaSolicitudPage() {
     event.preventDefault()
     setEnviado(true)
     setAviso(null)
-    const encontrados = validarSolicitud(datos)
+    const encontrados = validarSolicitud(datos, requiereUbicacion(datos))
     setErrores(encontrados)
     if (Object.keys(encontrados).length > 0) return enfocarPrimerError(encontrados)
 
@@ -118,6 +131,7 @@ export function NuevaSolicitudPage() {
 
   const categoria = catalogos?.categorias.find((c) => c.id === datos.categoriaId)
   const prioridad = catalogos?.prioridades.find((p) => p.id === datos.prioridadId)
+  const ubicacionObligatoria = categoria?.requiereUbicacion ?? false
 
   return (
     <div className="max-w-[760px]">
@@ -139,20 +153,13 @@ export function NuevaSolicitudPage() {
 
       <div className="rounded-card border border-line bg-surface p-6 max-sm:p-[18px]">
         {catalogoError ? (
-          <div role="alert" className="grid justify-items-center gap-3 py-10 text-center">
-            <Icon name="wifi-off" className="size-6 text-muted" />
-            <p className="text-muted">{catalogoError}</p>
-            <Button
-              size="sm"
-              onClick={() => {
-                setCatalogoError(null)
-                setIntento((n) => n + 1)
-              }}
-            >
-              <Icon name="refresh" className="size-4" />
-              Reintentar
-            </Button>
-          </div>
+          <LoadError
+            message={catalogoError}
+            onRetry={() => {
+              setCatalogoError(null)
+              setIntento((n) => n + 1)
+            }}
+          />
         ) : !catalogos ? (
           <div role="status" className="grid gap-5" aria-label="Cargando formulario">
             {[0, 1, 2].map((i) => (
@@ -239,7 +246,9 @@ export function NuevaSolicitudPage() {
 
               <fieldset>
                 <legend className="text-[13px] font-semibold">
-                  Ubicación<span className="text-bad"> *</span>
+                  Ubicación
+                  {ubicacionObligatoria && <span className="text-bad"> *</span>}
+                  {categoria && !ubicacionObligatoria && <span className="font-normal text-muted"> (opcional)</span>}
                 </legend>
                 <div className="mt-1.5 grid gap-2.5 sm:grid-cols-3">
                   {(

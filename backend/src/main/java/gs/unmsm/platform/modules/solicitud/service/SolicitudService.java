@@ -28,7 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +57,9 @@ public class SolicitudService {
         Categoria categoria = categorias.findById(request.categoriaId())
                 .filter(c -> Boolean.TRUE.equals(c.getActivo()))
                 .orElseThrow(() -> new FieldValidationException("categoriaId", "La categoría seleccionada no está disponible."));
+        if (categoria.exigeUbicacion()) {
+            validarUbicacion(request, categoria);
+        }
         Prioridad prioridad = prioridades.findById(request.prioridadId())
                 .orElseThrow(() -> new FieldValidationException("prioridadId", "La prioridad seleccionada no existe."));
         List<EvidenciaStorage.ArchivoValidado> adjuntos = storage.validar(archivos);
@@ -102,5 +107,16 @@ public class SolicitudService {
         return new SolicitudRegistradaResponse(solicitud.getId(), solicitud.getCodigo(), solicitud.getAsunto(),
                 categoria.getNombre(), categoria.getArea().getNombre(), prioridad.getNombre(), pendiente.getNombre(),
                 solicitud.getFechaCreacion(), solicitud.getFechaVencimiento(), guardadas.size());
+    }
+
+    private static void validarUbicacion(RegistrarSolicitudRequest request, Categoria categoria) {
+        Map<String, String> faltantes = new LinkedHashMap<>();
+        if (request.pabellon() == null) faltantes.put("pabellon", "Indica el pabellón.");
+        if (request.nivel() == null) faltantes.put("nivel", "Indica el piso o nivel.");
+        if (request.ambiente() == null) faltantes.put("ambiente", "Indica el aula o ambiente.");
+        if (!faltantes.isEmpty()) {
+            throw new FieldValidationException(
+                    "Las solicitudes de %s requieren la ubicación.".formatted(categoria.getNombre()), faltantes);
+        }
     }
 }

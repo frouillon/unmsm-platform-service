@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FieldValidationException.class)
     public ResponseEntity<ApiError> handleFieldRule(FieldValidationException ex, HttpServletRequest req) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, Map.of(ex.getField(), ex.getMessage()));
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, ex.getFields());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

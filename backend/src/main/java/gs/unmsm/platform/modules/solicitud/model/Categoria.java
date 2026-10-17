@@ -27,4 +27,12 @@ public class Categoria {
     @Column(name = "activo", nullable = false)
     @Builder.Default
     private Boolean activo = true;
+
+    /** Si es true, el estudiante debe indicar pabellón, piso y ambiente. Null equivale a false. */
+    @Column(name = "requiere_ubicacion")
+    private Boolean requiereUbicacion;
+
+    public boolean exigeUbicacion() {
+        return Boolean.TRUE.equals(requiereUbicacion);
+    }
 }

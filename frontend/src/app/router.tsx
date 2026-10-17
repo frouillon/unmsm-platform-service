@@ -2,7 +2,10 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { GuestOnly, HomeRedirect, RequireAuth } from '../features/auth/guards'
 import { AppShell } from '../features/shell/AppShell'
 import type { Rol } from '../lib/domain'
+import { DetalleSolicitudPage } from '../pages/DetalleSolicitudPage'
+import { InicioEstudiantePage } from '../pages/InicioEstudiantePage'
 import { LoginPage } from '../pages/LoginPage'
+import { MisSolicitudesPage } from '../pages/MisSolicitudesPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NuevaSolicitudPage } from '../pages/NuevaSolicitudPage'
 import { SectionPlaceholder as Section } from '../pages/SectionPlaceholder'
@@ -25,14 +28,10 @@ export const router = createBrowserRouter([
         element: <AppShell />,
         children: [
           forRole('ESTUDIANTE', [
-            { path: '/inicio', element: <Section subtitle="¿Qué necesitas hacer hoy?" icon="home" /> },
-            {
-              path: '/solicitudes',
-              element: (
-                <Section title="Mis solicitudes" subtitle="Consulta el estado y el historial de lo que has registrado." icon="list" />
-              ),
-            },
+            { path: '/inicio', element: <InicioEstudiantePage /> },
+            { path: '/solicitudes', element: <MisSolicitudesPage /> },
             { path: '/solicitudes/nueva', element: <NuevaSolicitudPage /> },
+            { path: '/solicitudes/:codigo', element: <DetalleSolicitudPage /> },
           ]),
           forRole('TECNICO', [
             { path: '/tecnico', element: <Section subtitle="Estas son las solicitudes que tienes a cargo." icon="home" /> },

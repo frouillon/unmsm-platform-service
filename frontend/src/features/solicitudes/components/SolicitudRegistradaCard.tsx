@@ -44,10 +44,10 @@ export function SolicitudRegistradaCard({ solicitud, onOtra }: SolicitudRegistra
       </dl>
       <div className="mt-6 flex flex-wrap justify-center gap-2.5 max-sm:flex-col">
         <Link
-          to="/solicitudes"
+          to={`/solicitudes/${solicitud.codigo}`}
           className="inline-flex h-10 items-center justify-center rounded border border-primary bg-primary px-4 text-sm font-semibold text-white transition-colors hover:border-primary-hover hover:bg-primary-hover max-sm:min-h-11"
         >
-          Ver mis solicitudes
+          Ver solicitud
         </Link>
         <button
           type="button"

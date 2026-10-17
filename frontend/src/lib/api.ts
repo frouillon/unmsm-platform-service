@@ -59,3 +59,20 @@ export async function apiFetch<T>(path: string, { body, headers, ...init }: ApiO
   }
   return data as T
 }
+
+/** Descarga binaria autenticada (p. ej. evidencias), con el mismo manejo de errores que apiFetch. */
+export async function apiBlob(path: string): Promise<Blob> {
+  const token = getToken()
+  let response: Response
+  try {
+    response = await fetch(BASE_URL + path, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  } catch {
+    throw new ApiError(0, 'No se pudo conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.')
+  }
+  if (response.status === 401 && token) onUnauthorized?.()
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new ApiError(response.status, data?.message ?? 'No se pudo descargar el archivo.')
+  }
+  return response.blob()
+}

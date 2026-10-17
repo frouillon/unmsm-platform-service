@@ -47,7 +47,21 @@ class DataSeederTest {
 
     @Test
     void creaUsuariosDemoConCorreoInstitucional() {
-        assertThat(usuarioRepository.count()).isGreaterThanOrEqualTo(12);
+        assertThat(usuarioRepository.count()).isGreaterThanOrEqualTo(18);
+        assertThat(usuarioRepository.findByCorreoInstitucional("max.astuhuaman@unmsm.edu.pe"))
+                .hasValueSatisfying(u -> {
+                    assertThat(u.getRol().getNombre()).isEqualTo(RolNombre.ESTUDIANTE);
+                    assertThat(passwordEncoder.matches("unmsm", u.getPasswordHash())).isTrue();
+                });
+        assertThat(usuarioRepository.findByCorreoInstitucional("favio.rouillon@unmsm.edu.pe"))
+                .hasValueSatisfying(u -> assertThat(u.getRol().getNombre()).isEqualTo(RolNombre.TECNICO));
+        assertThat(usuarioRepository.findByCorreoInstitucional("ronald.munayco@unmsm.edu.pe"))
+                .hasValueSatisfying(u -> assertThat(u.getRol().getNombre()).isEqualTo(RolNombre.SUPERVISOR));
+        assertThat(usuarioRepository.findByCorreoInstitucional("diego.guzman@unmsm.edu.pe"))
+                .hasValueSatisfying(u -> assertThat(u.getRol().getNombre()).isEqualTo(RolNombre.ADMINISTRADOR));
+        assertThat(usuarioRepository.findByCorreoInstitucional("kenner.tataje@unmsm.edu.pe"))
+                .hasValueSatisfying(u -> assertThat(u.getNombres()).isEqualTo("Kenner Tataje"));
+        assertThat(usuarioRepository.findByCorreoInstitucional("kenner.tataja@unmsm.edu.pe")).isEmpty();
 
         Usuario tecnica = usuarioRepository.findByCorreoInstitucional("diana.cardenas@unmsm.edu.pe").orElseThrow();
         assertThat(tecnica.getRol().getNombre()).isEqualTo(RolNombre.TECNICO);

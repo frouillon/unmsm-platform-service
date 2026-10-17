@@ -32,7 +32,7 @@ export const EVIDENCIAS = {
 
 const EXTENSIONES = /\.(png|jpe?g|pdf)$/i
 
-export function validarSolicitud(d: NuevaSolicitud): ErroresSolicitud {
+export function validarSolicitud(d: NuevaSolicitud, requiereUbicacion: boolean): ErroresSolicitud {
   const e: ErroresSolicitud = {}
   if (d.categoriaId == null) e.categoriaId = 'Selecciona una categoría.'
   if (!d.asunto.trim()) e.asunto = 'Escribe el asunto de la solicitud.'
@@ -41,9 +41,11 @@ export function validarSolicitud(d: NuevaSolicitud): ErroresSolicitud {
   if (!descripcion) e.descripcion = 'Describe qué ocurre.'
   else if (descripcion < LIMITES.descripcionMin || descripcion > LIMITES.descripcionMax)
     e.descripcion = 'La descripción debe tener entre 20 y 2000 caracteres.'
-  if (!d.pabellon.trim()) e.pabellon = 'Indica el pabellón.'
-  if (!d.nivel.trim()) e.nivel = 'Indica el piso o nivel.'
-  if (!d.ambiente.trim()) e.ambiente = 'Indica el aula o ambiente.'
+  if (requiereUbicacion) {
+    if (!d.pabellon.trim()) e.pabellon = 'Indica el pabellón.'
+    if (!d.nivel.trim()) e.nivel = 'Indica el piso o nivel.'
+    if (!d.ambiente.trim()) e.ambiente = 'Indica el aula o ambiente.'
+  }
   if (d.prioridadId == null) e.prioridadId = 'Selecciona una prioridad.'
   return e
 }

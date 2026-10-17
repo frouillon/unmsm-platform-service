@@ -60,12 +60,23 @@ class SolicitudControllerTest {
     }
 
     private String json(String asunto, String descripcion) {
-        long categoria = categorias.findByNombre("Soporte informático").orElseThrow().getId();
+        return json("Soporte informático", asunto, descripcion, true);
+    }
+
+    private String json(String categoriaNombre, String asunto, String descripcion, boolean conUbicacion) {
+        long categoria = categorias.findByNombre(categoriaNombre).orElseThrow().getId();
         long prioridad = prioridades.findByNombre("Media").orElseThrow().getId();
+        String ubicacion = conUbicacion
+                ? "\"pabellon\":\"Pabellón B\",\"nivel\":\"2.º piso\",\"ambiente\":\"Aula 204\""
+                : "\"pabellon\":\" \",\"nivel\":null,\"ambiente\":\"\"";
         return """
-                {"categoriaId":%d,"prioridadId":%d,"asunto":"%s","descripcion":"%s",
-                 "pabellon":"Pabellón B","nivel":"2.º piso","ambiente":"Aula 204"}
-                """.formatted(categoria, prioridad, asunto, descripcion);
+                {"categoriaId":%d,"prioridadId":%d,"asunto":"%s","descripcion":"%s",%s}
+                """.formatted(categoria, prioridad, asunto, descripcion, ubicacion);
+    }
+
+    private String registrarComo(String token, String cuerpo, MockMultipartFile... archivos) throws Exception {
+        return JsonPath.read(mvc.perform(registro(token, cuerpo, archivos)).andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString(), "$.codigo");
     }
 
     private MockMultipartHttpServletRequestBuilder registro(String token, String cuerpo, MockMultipartFile... archivos) {
@@ -140,7 +151,76 @@ class SolicitudControllerTest {
                 .andExpect(jsonPath("$.fieldErrors.asunto").value("Escribe el asunto de la solicitud."))
                 .andExpect(jsonPath("$.fieldErrors.descripcion")
                         .value("La descripción debe tener entre 20 y 2000 caracteres."))
-                .andExpect(jsonPath("$.fieldErrors.pabellon").value("Indica el pabellón."));
+                .andExpect(jsonPath("$.fieldErrors.pabellon").doesNotExist());
+    }
+
+    @Test
+    void ubicacionSoloEsObligatoriaParaCategoriasPresenciales() throws Exception {
+        String token = tokenDe("andrea.mendoza@unmsm.edu.pe");
+        mvc.perform(registro(token, json("Mantenimiento", "Fluorescente parpadea",
+                        "El fluorescente del pasillo parpadea todo el día.", false)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.pabellon").value("Indica el pabellón."))
+                .andExpect(jsonPath("$.fieldErrors.nivel").value("Indica el piso o nivel."))
+                .andExpect(jsonPath("$.fieldErrors.ambiente").value("Indica el aula o ambiente."));
+
+        String codigo = registrarComo(token, json("Soporte informático", "Sin acceso al correo",
+                "No puedo ingresar a mi correo institucional desde ayer.", false));
+        Solicitud guardada = solicitudes.findByCodigo(codigo).orElseThrow();
+        assertThat(guardada.getPabellon()).isNull();
+        assertThat(guardada.getNivel()).isNull();
+        assertThat(guardada.getAmbiente()).isNull();
+    }
+
+    @Test
+    void estudianteVeSusSolicitudesYSuDetalleConHistorialYEvidencias() throws Exception {
+        String andrea = tokenDe("andrea.mendoza@unmsm.edu.pe");
+        String codigo = registrarComo(andrea, json("Proyector sin señal", "El proyector del aula 204 no muestra señal."),
+                new MockMultipartFile("evidencias", "señal.png", "image/png", PNG));
+
+        mvc.perform(get("/api/solicitudes/mias").header("Authorization", andrea))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].codigo").value(codigo))
+                .andExpect(jsonPath("$[0].tecnico").doesNotExist())
+                .andExpect(jsonPath("$[0].ultimaActualizacion").exists());
+
+        String detalle = mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", andrea))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.descripcion").value("El proyector del aula 204 no muestra señal."))
+                .andExpect(jsonPath("$.solicitante").value("Andrea Mendoza"))
+                .andExpect(jsonPath("$.historial", hasSize(1)))
+                .andExpect(jsonPath("$.historial[0].estadoDestino").value(EstadoNombre.PENDIENTE))
+                .andExpect(jsonPath("$.historial[0].rol").value("ESTUDIANTE"))
+                .andExpect(jsonPath("$.evidencias[0].nombre").value("señal.png"))
+                .andReturn().getResponse().getContentAsString();
+
+        Integer evidenciaId = JsonPath.read(detalle, "$.evidencias[0].id");
+        mvc.perform(get("/api/solicitudes/%s/evidencias/%d".formatted(codigo, evidenciaId))
+                        .header("Authorization", andrea))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("inline")))
+                .andExpect(result -> assertThat(result.getResponse().getContentAsByteArray()).isEqualTo(PNG));
+    }
+
+    @Test
+    void solicitudAjenaResponde404SegunElRol() throws Exception {
+        String codigo = registrarComo(tokenDe("andrea.mendoza@unmsm.edu.pe"),
+                json("Proyector sin señal", "El proyector del aula 204 no muestra señal."));
+
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", tokenDe("luis.paredes@unmsm.edu.pe")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No encontramos la solicitud o no tienes acceso a ella."));
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", tokenDe("carlos.quispe@unmsm.edu.pe")))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", tokenDe("lucia.ramos@unmsm.edu.pe")))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", tokenDe("marcos.vidal@unmsm.edu.pe")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/solicitudes/SOL-1999-0001").header("Authorization", tokenDe("marcos.vidal@unmsm.edu.pe")))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/solicitudes/mias").header("Authorization", tokenDe("carlos.quispe@unmsm.edu.pe")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -168,7 +248,10 @@ class SolicitudControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(5)))
                 .andExpect(jsonPath("$[?(@.nombre == 'Soporte informático')].area")
-                        .value(contains("Tecnologías de la información")));
+                        .value(contains("Tecnologías de la información")))
+                .andExpect(jsonPath("$[?(@.requiereUbicacion == true)].nombre")
+                        .value(org.hamcrest.Matchers.containsInAnyOrder(
+                                "Infraestructura", "Mantenimiento", "Reserva de ambientes")));
         mvc.perform(get("/api/catalogos/prioridades").header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].nombre").value(contains("Baja", "Media", "Alta", "Urgente")));

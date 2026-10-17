@@ -52,13 +52,13 @@ public class Solicitud {
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "pabellon", nullable = false, length = 100)
+    @Column(name = "pabellon", length = 100)
     private String pabellon;
 
-    @Column(name = "nivel", nullable = false, length = 50)
+    @Column(name = "nivel", length = 50)
     private String nivel;
 
-    @Column(name = "ambiente", nullable = false, length = 100)
+    @Column(name = "ambiente", length = 100)
     private String ambiente;
 
     @Column(name = "fecha_creacion", nullable = false, updatable = false)

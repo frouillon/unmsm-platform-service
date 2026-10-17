@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /** Guarda en disco las evidencias adjuntas a una solicitud. */
@@ -101,6 +102,12 @@ public class EvidenciaStorage {
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudieron guardar las evidencias de " + codigo, e);
         }
+    }
+
+    /** Ruta en disco de una evidencia guardada; vacía si no existe o si la URI sale de la carpeta raíz. */
+    public Optional<Path> ubicar(String uri) {
+        Path ruta = raiz.resolve(uri).normalize();
+        return ruta.startsWith(raiz) && Files.isRegularFile(ruta) ? Optional.of(ruta) : Optional.empty();
     }
 
     private void registrarLimpiezaSiFalla(List<Path> escritos) {
