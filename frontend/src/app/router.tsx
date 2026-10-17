@@ -4,6 +4,7 @@ import { AppShell } from '../features/shell/AppShell'
 import type { Rol } from '../lib/domain'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { NuevaSolicitudPage } from '../pages/NuevaSolicitudPage'
 import { SectionPlaceholder as Section } from '../pages/SectionPlaceholder'
 
 const forRole = (rol: Rol, children: RouteObject[]): RouteObject => ({
@@ -31,10 +32,7 @@ export const router = createBrowserRouter([
                 <Section title="Mis solicitudes" subtitle="Consulta el estado y el historial de lo que has registrado." icon="list" />
               ),
             },
-            {
-              path: '/solicitudes/nueva',
-              element: <Section title="Nueva solicitud" subtitle="Cuéntanos qué necesitas." icon="plus" />,
-            },
+            { path: '/solicitudes/nueva', element: <NuevaSolicitudPage /> },
           ]),
           forRole('TECNICO', [
             { path: '/tecnico', element: <Section subtitle="Estas son las solicitudes que tienes a cargo." icon="home" /> },

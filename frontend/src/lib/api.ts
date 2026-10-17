@@ -26,19 +26,21 @@ type ApiOptions = Omit<RequestInit, 'body' | 'headers'> & {
   headers?: Record<string, string>
 }
 
+/** `body` se envía como JSON, salvo `FormData`, que el navegador codifica como multipart. */
 export async function apiFetch<T>(path: string, { body, headers, ...init }: ApiOptions = {}): Promise<T> {
   const token = getToken()
+  const isForm = body instanceof FormData
   let response: Response
   try {
     response = await fetch(BASE_URL + path, {
       ...init,
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...headers,
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, 'No se pudo conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.')
