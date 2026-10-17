@@ -3,7 +3,7 @@ import { Icon } from '../components/ui/Icon'
 
 export function ForbiddenPage() {
   return (
-    <main className="grid min-h-dvh place-items-center px-6">
+    <section className="grid place-items-center px-6 py-20">
       <div className="flex max-w-sm flex-col items-center gap-2 text-center text-muted">
         <span className="mb-1 grid size-12 place-items-center rounded-[14px] bg-bad-soft text-bad">
           <Icon name="shield" className="size-6" />
@@ -17,6 +17,6 @@ export function ForbiddenPage() {
           Ir a mi inicio
         </Link>
       </div>
-    </main>
+    </section>
   )
 }
