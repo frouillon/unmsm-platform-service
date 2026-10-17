@@ -2,6 +2,13 @@ import { getToken } from './session'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
+let onUnauthorized: (() => void) | null = null
+
+/** Se invoca cuando una petición con token recibe 401 (token expirado o revocado). */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly fieldErrors: Record<string, string>
@@ -40,6 +47,7 @@ export async function apiFetch<T>(path: string, { body, headers, ...init }: ApiO
   if (response.status === 204) return undefined as T
 
   const data = await response.json().catch(() => null)
+  if (response.status === 401 && token) onUnauthorized?.()
   if (!response.ok) {
     throw new ApiError(
       response.status,
