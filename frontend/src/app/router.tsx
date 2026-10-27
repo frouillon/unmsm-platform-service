@@ -9,6 +9,9 @@ import { MisSolicitudesPage } from '../pages/MisSolicitudesPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NuevaSolicitudPage } from '../pages/NuevaSolicitudPage'
 import { SectionPlaceholder as Section } from '../pages/SectionPlaceholder'
+import { AsignadasPage } from '../pages/tecnico/AsignadasPage'
+import { GestionSolicitudesPage } from '../pages/supervisor/GestionSolicitudesPage'
+import { SolicitudesAdminPage } from '../pages/admin/SolicitudesAdminPage'
 
 const forRole = (rol: Rol, children: RouteObject[]): RouteObject => ({
   element: <RequireAuth roles={[rol]} />,
@@ -34,38 +37,21 @@ export const router = createBrowserRouter([
             { path: '/solicitudes/:codigo', element: <DetalleSolicitudPage /> },
           ]),
           forRole('TECNICO', [
-            { path: '/tecnico', element: <Section subtitle="Estas son las solicitudes que tienes a cargo." icon="home" /> },
-            {
-              path: '/tecnico/asignadas',
-              element: (
-                <Section title="Solicitudes asignadas" subtitle="Todo lo que tienes a cargo, ordenado por prioridad." icon="list" />
-              ),
-            },
-            {
-              path: '/tecnico/historial',
-              element: <Section title="Historial" subtitle="Solicitudes que ya atendiste." icon="clock" />,
-            },
+            { path: '/tecnico', element: <AsignadasPage /> },
+            { path: '/tecnico/asignadas', element: <AsignadasPage /> },
+            { path: '/tecnico/historial', element: <Section title="Historial" subtitle="Solicitudes que ya atendiste." icon="clock" /> },
           ]),
           forRole('SUPERVISOR', [
-            { path: '/supervisor', element: <Section subtitle="Vista general de las solicitudes y los plazos." icon="home" /> },
-            {
-              path: '/supervisor/solicitudes',
-              element: <Section title="Solicitudes" subtitle="Clasifica, asigna y da seguimiento a las solicitudes de tu área." icon="list" />,
-            },
-            {
-              path: '/supervisor/tecnicos',
-              element: <Section title="Técnicos" subtitle="Carga de trabajo del equipo de atención." icon="users" />,
-            },
-            {
-              path: '/supervisor/reportes',
-              element: <Section title="Reportes" subtitle="Indicadores de desempeño del servicio." icon="chart" />,
-            },
+            { path: '/supervisor', element: <GestionSolicitudesPage /> },
+            { path: '/supervisor/solicitudes', element: <GestionSolicitudesPage /> },
+            { path: '/supervisor/tecnicos', element: <Section title="Técnicos" subtitle="Carga de trabajo del equipo de atención." icon="users" /> },
+            { path: '/supervisor/reportes', element: <Section title="Reportes" subtitle="Indicadores de desempeño del servicio." icon="chart" /> },
           ]),
           forRole('ADMINISTRADOR', [
             { path: '/admin', element: <Section subtitle="Resumen de usuarios y configuración del sistema." icon="home" /> },
             {
               path: '/admin/solicitudes',
-              element: <Section title="Solicitudes" subtitle="Todas las solicitudes registradas en el sistema." icon="list" />,
+              element: <SolicitudesAdminPage />,
             },
             {
               path: '/admin/usuarios',

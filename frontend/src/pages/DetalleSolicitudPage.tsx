@@ -38,6 +38,8 @@ function VolverLink() {
 export function DetalleSolicitudPage() {
   const { codigo = '' } = useParams()
   const detalle = useApi(() => fetchSolicitud(codigo), `solicitud-${codigo}`)
+  const { usuario } = useAuth()
+  const puedeGestionar = usuario && (usuario.rol === 'TECNICO' || usuario.rol === 'SUPERVISOR' || usuario.rol === 'ADMINISTRADOR')
 
   if (detalle.status === 'error') {
     return (
@@ -119,8 +121,20 @@ export function DetalleSolicitudPage() {
             Seguimiento
           </h2>
           <Seguimiento historial={s.historial} estado={s.estado} />
+          {puedeGestionar ? (
+            <div>
+              {(usuario?.rol === 'SUPERVISOR' || usuario?.rol === 'ADMINISTRADOR') ? (
+                <AsignarTecnicoForm codigo={s.codigo} onSuccess={() => detalle.reload()} />
+              ) : null}
+              <CambiarEstadoForm codigo={s.codigo} estadoActual={s.estado} rol={usuario!.rol} onSuccess={() => detalle.reload()} />
+            </div>
+          ) : null}
         </aside>
       </div>
     </>
   )
 }
+
+import { useAuth } from '../features/auth/useAuth'
+import { CambiarEstadoForm } from '../features/solicitudes/components/CambiarEstadoForm'
+import { AsignarTecnicoForm } from '../features/solicitudes/components/AsignarTecnicoForm'

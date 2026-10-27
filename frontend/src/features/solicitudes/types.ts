@@ -76,3 +76,28 @@ export type SolicitudRegistrada = {
   fechaVencimiento: string
   evidencias: number
 }
+
+export type SolicitudGestionResumen = {
+  id: number
+  codigo: string
+  asunto: string
+  categoria: string
+  area: string
+  prioridad: string
+  estado: string
+  solicitante: string
+  tecnico: string | null
+  fechaCreacion: string
+  fechaVencimiento: string
+  ultimoMovimiento: string | null
+}
+
+export type AsignarSolicitudRequest = {
+  tecnicoId: number
+  notaTecnica?: string | null
+}
+
+export type CambiarEstadoRequest = {
+  estadoDestino: string
+  notaTecnica?: string | null
+}
