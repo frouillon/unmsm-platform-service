@@ -74,11 +74,11 @@ public class DataSeeder implements ApplicationRunner {
                 .forEach(this::area);
 
         List.of(
-                new CategoriaSeed("Mantenimiento", AREA_MANTENIMIENTO, true),
-                new CategoriaSeed("Infraestructura", AREA_INFRAESTRUCTURA, true),
+                new CategoriaSeed("Mantenimiento", AREA_MANTENIMIENTO, false),
+                new CategoriaSeed("Infraestructura", AREA_INFRAESTRUCTURA, false),
                 new CategoriaSeed("Soporte informático", AREA_TI, false),
                 new CategoriaSeed("Administrativa", AREA_SECRETARIA, false),
-                new CategoriaSeed("Reserva de ambientes", AREA_SERVICIOS, true)
+                new CategoriaSeed("Reserva de ambientes", AREA_SERVICIOS, false)
         ).forEach(this::categoria);
 
         List.of(
@@ -140,12 +140,7 @@ public class DataSeeder implements ApplicationRunner {
 
     private void categoria(CategoriaSeed seed) {
         categoriaRepository.findByNombre(seed.nombre()).ifPresentOrElse(
-                existente -> {
-                    // Solo completa categorías creadas antes de existir la columna; respeta cambios posteriores.
-                    if (existente.getRequiereUbicacion() == null) {
-                        existente.setRequiereUbicacion(seed.requiereUbicacion());
-                    }
-                },
+                existente -> existente.setRequiereUbicacion(seed.requiereUbicacion()),
                 () -> categoriaRepository.save(Categoria.builder().nombre(seed.nombre()).area(area(seed.area()))
                         .requiereUbicacion(seed.requiereUbicacion()).build()));
     }

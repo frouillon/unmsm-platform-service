@@ -76,14 +76,11 @@ export function NuevaSolicitudPage() {
     }
   }, [intento, categoriaInicial])
 
-  const requiereUbicacion = (d: NuevaSolicitud) =>
-    catalogos?.categorias.find((c) => c.id === d.categoriaId)?.requiereUbicacion ?? false
-
   const actualizar = <K extends keyof NuevaSolicitud>(campo: K, valor: NuevaSolicitud[K]) => {
     const siguiente = { ...datos, [campo]: valor }
     setDatos(siguiente)
     if (enviado) {
-      setErrores((prev) => ({ ...validarSolicitud(siguiente, requiereUbicacion(siguiente)), evidencias: prev.evidencias }))
+      setErrores((prev) => ({ ...validarSolicitud(siguiente), evidencias: prev.evidencias }))
     }
   }
 
@@ -96,7 +93,7 @@ export function NuevaSolicitudPage() {
     event.preventDefault()
     setEnviado(true)
     setAviso(null)
-    const encontrados = validarSolicitud(datos, requiereUbicacion(datos))
+    const encontrados = validarSolicitud(datos)
     setErrores(encontrados)
     if (Object.keys(encontrados).length > 0) return enfocarPrimerError(encontrados)
 
@@ -131,8 +128,6 @@ export function NuevaSolicitudPage() {
 
   const categoria = catalogos?.categorias.find((c) => c.id === datos.categoriaId)
   const prioridad = catalogos?.prioridades.find((p) => p.id === datos.prioridadId)
-  const ubicacionObligatoria = categoria?.requiereUbicacion ?? false
-
   return (
     <div className="max-w-[760px]">
       <Link
@@ -247,13 +242,12 @@ export function NuevaSolicitudPage() {
               <fieldset>
                 <legend className="text-[13px] font-semibold">
                   Ubicación
-                  {ubicacionObligatoria && <span className="text-bad"> *</span>}
-                  {categoria && !ubicacionObligatoria && <span className="font-normal text-muted"> (opcional)</span>}
+                  <span className="font-normal text-muted"> (opcional)</span>
                 </legend>
                 <div className="mt-1.5 grid gap-2.5 sm:grid-cols-3">
                   {(
                     [
-                      ['pabellon', 'Pabellón', 'Ej. Pabellón B', LIMITES.pabellon],
+                      ['pabellon', 'Pabellón', 'Ej. Letras', LIMITES.pabellon],
                       ['nivel', 'Piso o nivel', 'Ej. 2.º piso', LIMITES.nivel],
                       ['ambiente', 'Aula o ambiente', 'Ej. Aula 4B', LIMITES.ambiente],
                     ] as const

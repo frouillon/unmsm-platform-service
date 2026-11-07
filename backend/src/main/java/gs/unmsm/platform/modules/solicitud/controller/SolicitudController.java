@@ -1,11 +1,14 @@
 package gs.unmsm.platform.modules.solicitud.controller;
 
 import gs.unmsm.platform.common.security.UsuarioAutenticado;
+import gs.unmsm.platform.modules.solicitud.dto.AvanzarSolicitudRequest;
 import gs.unmsm.platform.modules.solicitud.dto.RegistrarSolicitudRequest;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudRegistradaResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudResumenResponse;
+import gs.unmsm.platform.modules.solicitud.dto.TecnicoResponse;
 import gs.unmsm.platform.modules.solicitud.service.SolicitudConsultaService;
+import gs.unmsm.platform.modules.solicitud.service.SolicitudFlujoService;
 import gs.unmsm.platform.modules.solicitud.service.SolicitudService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +40,7 @@ public class SolicitudController {
 
     private final SolicitudService solicitudService;
     private final SolicitudConsultaService consultaService;
+    private final SolicitudFlujoService flujoService;
 
     /** Multipart: parte "solicitud" (JSON) y, opcionalmente, partes "evidencias" (PNG, JPG o PDF). */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -52,6 +57,46 @@ public class SolicitudController {
     @PreAuthorize("hasRole('ESTUDIANTE')")
     public List<SolicitudResumenResponse> mias(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return consultaService.misSolicitudes(usuario);
+    }
+
+    @GetMapping("/area")
+    @PreAuthorize("hasRole('SUPERVISOR')")
+    public List<SolicitudResumenResponse> delArea(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return consultaService.delArea(usuario);
+    }
+
+    @GetMapping("/asignadas")
+    @PreAuthorize("hasRole('TECNICO')")
+    public List<SolicitudResumenResponse> asignadas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return consultaService.asignadas(usuario);
+    }
+
+    @GetMapping("/tecnicos")
+    @PreAuthorize("hasRole('SUPERVISOR')")
+    public List<TecnicoResponse> tecnicos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return consultaService.tecnicosDelArea(usuario);
+    }
+
+    @GetMapping("/todas")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public List<SolicitudResumenResponse> todas() {
+        return consultaService.todas();
+    }
+
+    @GetMapping("/{codigo}/tecnicos")
+    @PreAuthorize("hasAnyRole('SUPERVISOR', 'ADMINISTRADOR')")
+    public List<TecnicoResponse> tecnicosDeSolicitud(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                                     @PathVariable String codigo) {
+        return consultaService.tecnicosDeSolicitud(usuario, codigo);
+    }
+
+    @PostMapping("/{codigo}/estado")
+    @PreAuthorize("hasAnyRole('ESTUDIANTE', 'TECNICO', 'SUPERVISOR', 'ADMINISTRADOR')")
+    public SolicitudDetalleResponse avanzar(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                            @PathVariable String codigo,
+                                            @Valid @RequestBody AvanzarSolicitudRequest request) {
+        flujoService.avanzar(usuario, codigo, request);
+        return consultaService.detalle(usuario, codigo);
     }
 
     @GetMapping("/{codigo}")

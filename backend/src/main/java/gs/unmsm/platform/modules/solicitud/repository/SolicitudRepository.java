@@ -14,4 +14,13 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
 
     @EntityGraph(attributePaths = {"tecnico", "area", "categoria", "prioridad", "estado"})
     List<Solicitud> findBySolicitanteIdOrderByFechaCreacionDescIdDesc(Long solicitanteId);
+
+    @EntityGraph(attributePaths = {"tecnico", "area", "categoria", "prioridad", "estado"})
+    List<Solicitud> findByAreaIdOrderByFechaCreacionDescIdDesc(Long areaId);
+
+    @EntityGraph(attributePaths = {"tecnico", "area", "categoria", "prioridad", "estado"})
+    List<Solicitud> findByTecnicoIdOrderByFechaCreacionDescIdDesc(Long tecnicoId);
+
+    @EntityGraph(attributePaths = {"tecnico", "area", "categoria", "prioridad", "estado"})
+    List<Solicitud> findAllByOrderByFechaCreacionDescIdDesc();
 }

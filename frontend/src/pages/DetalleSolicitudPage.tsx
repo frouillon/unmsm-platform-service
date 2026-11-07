@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useLocation, useParams } from 'react-router'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Icon } from '../components/ui/Icon'
 import { LoadError } from '../components/ui/LoadError'
 import { PlazoTag } from '../components/ui/PlazoTag'
 import { PriorityTag } from '../components/ui/PriorityTag'
 import { StatusChip } from '../components/ui/StatusChip'
+import { AccionEstado } from '../features/solicitudes/components/AccionEstado'
 import { EvidenciasLista } from '../features/solicitudes/components/EvidenciasLista'
 import { Seguimiento } from '../features/solicitudes/components/Seguimiento'
 import { fetchSolicitud } from '../features/solicitudes/solicitudesApi'
@@ -23,14 +24,24 @@ function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode })
   )
 }
 
+function destinoVolver(pathname: string) {
+  if (pathname.startsWith('/tecnico/historial')) return { to: '/tecnico/historial', label: 'Volver al historial' }
+  if (pathname.startsWith('/tecnico')) return { to: '/tecnico/asignadas', label: 'Volver a asignadas' }
+  if (pathname.startsWith('/supervisor')) return { to: '/supervisor/solicitudes', label: 'Volver a solicitudes' }
+  if (pathname.startsWith('/admin')) return { to: '/admin/solicitudes', label: 'Volver a solicitudes' }
+  return { to: '/solicitudes', label: 'Volver a mis solicitudes' }
+}
+
 function VolverLink() {
+  const { pathname } = useLocation()
+  const destino = destinoVolver(pathname)
   return (
     <Link
-      to="/solicitudes"
+      to={destino.to}
       className="mb-4 inline-flex items-center gap-1 text-[13px] font-semibold text-muted hover:text-ink max-sm:min-h-11"
     >
       <Icon name="chev" className="size-4" />
-      Volver a mis solicitudes
+      {destino.label}
     </Link>
   )
 }
@@ -114,11 +125,14 @@ export function DetalleSolicitudPage() {
           </section>
         </div>
 
-        <aside className={`${card} p-5`} aria-labelledby="seguimiento">
-          <h2 id="seguimiento" className="mb-[18px] font-sans text-[15px] font-semibold tracking-normal">
-            Seguimiento
-          </h2>
-          <Seguimiento historial={s.historial} estado={s.estado} />
+        <aside className="grid gap-5">
+          {s.accion && <AccionEstado key={s.accion.estado} codigo={s.codigo} accion={s.accion} onHecho={detalle.reload} />}
+          <section className={`${card} p-5`} aria-labelledby="seguimiento">
+            <h2 id="seguimiento" className="mb-[18px] font-sans text-[15px] font-semibold tracking-normal">
+              Seguimiento
+            </h2>
+            <Seguimiento historial={s.historial} estado={s.estado} />
+          </section>
         </aside>
       </div>
     </>

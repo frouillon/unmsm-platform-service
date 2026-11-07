@@ -20,8 +20,13 @@ public record SolicitudDetalleResponse(
         LocalDateTime fechaCreacion,
         LocalDateTime fechaVencimiento,
         List<EvidenciaResponse> evidencias,
-        List<MovimientoResponse> historial
+        List<MovimientoResponse> historial,
+        AccionResponse accion
 ) {
+    /** Siguiente paso que este usuario puede ejecutar, o null si no le toca mover la solicitud. */
+    public record AccionResponse(String estado, boolean requiereTecnico) {
+    }
+
     public record EvidenciaResponse(Long id, String nombre, String tipoMime, long tamanoBytes) {
     }
 

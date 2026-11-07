@@ -2,13 +2,20 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { GuestOnly, HomeRedirect, RequireAuth } from '../features/auth/guards'
 import { AppShell } from '../features/shell/AppShell'
 import type { Rol } from '../lib/domain'
+import { AsignadasPage } from '../pages/AsignadasPage'
 import { DetalleSolicitudPage } from '../pages/DetalleSolicitudPage'
+import { HistorialTecnicoPage } from '../pages/HistorialTecnicoPage'
+import { InicioAdminPage } from '../pages/InicioAdminPage'
 import { InicioEstudiantePage } from '../pages/InicioEstudiantePage'
+import { InicioSupervisorPage } from '../pages/InicioSupervisorPage'
+import { InicioTecnicoPage } from '../pages/InicioTecnicoPage'
 import { LoginPage } from '../pages/LoginPage'
 import { MisSolicitudesPage } from '../pages/MisSolicitudesPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NuevaSolicitudPage } from '../pages/NuevaSolicitudPage'
 import { SectionPlaceholder as Section } from '../pages/SectionPlaceholder'
+import { SolicitudesAdminPage } from '../pages/SolicitudesAdminPage'
+import { SolicitudesAreaPage } from '../pages/SolicitudesAreaPage'
 
 const forRole = (rol: Rol, children: RouteObject[]): RouteObject => ({
   element: <RequireAuth roles={[rol]} />,
@@ -34,24 +41,16 @@ export const router = createBrowserRouter([
             { path: '/solicitudes/:codigo', element: <DetalleSolicitudPage /> },
           ]),
           forRole('TECNICO', [
-            { path: '/tecnico', element: <Section subtitle="Estas son las solicitudes que tienes a cargo." icon="home" /> },
-            {
-              path: '/tecnico/asignadas',
-              element: (
-                <Section title="Solicitudes asignadas" subtitle="Todo lo que tienes a cargo, ordenado por prioridad." icon="list" />
-              ),
-            },
-            {
-              path: '/tecnico/historial',
-              element: <Section title="Historial" subtitle="Solicitudes que ya atendiste." icon="clock" />,
-            },
+            { path: '/tecnico', element: <InicioTecnicoPage /> },
+            { path: '/tecnico/asignadas', element: <AsignadasPage /> },
+            { path: '/tecnico/asignadas/:codigo', element: <DetalleSolicitudPage /> },
+            { path: '/tecnico/historial', element: <HistorialTecnicoPage /> },
+            { path: '/tecnico/historial/:codigo', element: <DetalleSolicitudPage /> },
           ]),
           forRole('SUPERVISOR', [
-            { path: '/supervisor', element: <Section subtitle="Vista general de las solicitudes y los plazos." icon="home" /> },
-            {
-              path: '/supervisor/solicitudes',
-              element: <Section title="Solicitudes" subtitle="Clasifica, asigna y da seguimiento a las solicitudes de tu área." icon="list" />,
-            },
+            { path: '/supervisor', element: <InicioSupervisorPage /> },
+            { path: '/supervisor/solicitudes', element: <SolicitudesAreaPage /> },
+            { path: '/supervisor/solicitudes/:codigo', element: <DetalleSolicitudPage /> },
             {
               path: '/supervisor/tecnicos',
               element: <Section title="Técnicos" subtitle="Carga de trabajo del equipo de atención." icon="users" />,
@@ -62,11 +61,9 @@ export const router = createBrowserRouter([
             },
           ]),
           forRole('ADMINISTRADOR', [
-            { path: '/admin', element: <Section subtitle="Resumen de usuarios y configuración del sistema." icon="home" /> },
-            {
-              path: '/admin/solicitudes',
-              element: <Section title="Solicitudes" subtitle="Todas las solicitudes registradas en el sistema." icon="list" />,
-            },
+            { path: '/admin', element: <InicioAdminPage /> },
+            { path: '/admin/solicitudes', element: <SolicitudesAdminPage /> },
+            { path: '/admin/solicitudes/:codigo', element: <DetalleSolicitudPage /> },
             {
               path: '/admin/usuarios',
               element: <Section title="Usuarios" subtitle="Gestiona cuentas, roles y acceso al sistema." icon="users" />,

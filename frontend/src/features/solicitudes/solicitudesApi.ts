@@ -6,10 +6,39 @@ import type {
   SolicitudDetalle,
   SolicitudRegistrada,
   SolicitudResumen,
+  TecnicoOpcion,
 } from './types'
 
 export function fetchMisSolicitudes(): Promise<SolicitudResumen[]> {
   return apiFetch('/api/solicitudes/mias')
+}
+
+export function fetchSolicitudesArea(): Promise<SolicitudResumen[]> {
+  return apiFetch('/api/solicitudes/area')
+}
+
+export function fetchAsignadas(): Promise<SolicitudResumen[]> {
+  return apiFetch('/api/solicitudes/asignadas')
+}
+
+export function fetchTodas(): Promise<SolicitudResumen[]> {
+  return apiFetch('/api/solicitudes/todas')
+}
+
+export function fetchTecnicos(codigo: string): Promise<TecnicoOpcion[]> {
+  return apiFetch(`/api/solicitudes/${encodeURIComponent(codigo)}/tecnicos`)
+}
+
+export function avanzarSolicitud(
+  codigo: string,
+  estado: string,
+  tecnicoId: number | null,
+  nota: string,
+): Promise<SolicitudDetalle> {
+  return apiFetch(`/api/solicitudes/${encodeURIComponent(codigo)}/estado`, {
+    method: 'POST',
+    body: { estado, tecnicoId, nota: nota.trim() || null },
+  })
 }
 
 export function fetchSolicitud(codigo: string): Promise<SolicitudDetalle> {

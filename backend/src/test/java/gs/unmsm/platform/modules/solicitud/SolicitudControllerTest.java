@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
@@ -32,6 +33,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -155,17 +157,10 @@ class SolicitudControllerTest {
     }
 
     @Test
-    void ubicacionSoloEsObligatoriaParaCategoriasPresenciales() throws Exception {
+    void laUbicacionEsOpcionalEnCualquierCategoria() throws Exception {
         String token = tokenDe("andrea.mendoza@unmsm.edu.pe");
-        mvc.perform(registro(token, json("Mantenimiento", "Fluorescente parpadea",
-                        "El fluorescente del pasillo parpadea todo el día.", false)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.pabellon").value("Indica el pabellón."))
-                .andExpect(jsonPath("$.fieldErrors.nivel").value("Indica el piso o nivel."))
-                .andExpect(jsonPath("$.fieldErrors.ambiente").value("Indica el aula o ambiente."));
-
-        String codigo = registrarComo(token, json("Soporte informático", "Sin acceso al correo",
-                "No puedo ingresar a mi correo institucional desde ayer.", false));
+        String codigo = registrarComo(token, json("Mantenimiento", "Fluorescente parpadea",
+                "El fluorescente del pasillo parpadea todo el día.", false));
         Solicitud guardada = solicitudes.findByCodigo(codigo).orElseThrow();
         assertThat(guardada.getPabellon()).isNull();
         assertThat(guardada.getNivel()).isNull();
@@ -249,11 +244,86 @@ class SolicitudControllerTest {
                 .andExpect(jsonPath("$", hasSize(5)))
                 .andExpect(jsonPath("$[?(@.nombre == 'Soporte informático')].area")
                         .value(contains("Tecnologías de la información")))
-                .andExpect(jsonPath("$[?(@.requiereUbicacion == true)].nombre")
-                        .value(org.hamcrest.Matchers.containsInAnyOrder(
-                                "Infraestructura", "Mantenimiento", "Reserva de ambientes")));
+                .andExpect(jsonPath("$[?(@.requiereUbicacion == true)]").isEmpty());
         mvc.perform(get("/api/catalogos/prioridades").header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].nombre").value(contains("Baja", "Media", "Alta", "Urgente")));
+    }
+
+    @Test
+    void elFlujoAvanzaEnOrdenYRechazaSaltos() throws Exception {
+        String andrea = tokenDe("andrea.mendoza@unmsm.edu.pe");
+        String ronald = tokenDe("ronald.munayco@unmsm.edu.pe");
+        String diana = tokenDe("diana.cardenas@unmsm.edu.pe");
+        long dianaId = usuarios.findByCorreoInstitucional("diana.cardenas@unmsm.edu.pe").orElseThrow().getId();
+        long carlosId = usuarios.findByCorreoInstitucional("carlos.quispe@unmsm.edu.pe").orElseThrow().getId();
+        String codigo = registrarComo(andrea, json("Mantenimiento", "Fuga en el lavadero",
+                "El lavadero del primer piso pierde agua desde esta mañana.", true));
+
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", ronald)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"Asignado\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("No puedes pasar esta solicitud de Pendiente a Asignado."));
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", ronald))
+                .andExpect(jsonPath("$.estado").value("Pendiente"))
+                .andExpect(jsonPath("$.accion.estado").value("En revisión"))
+                .andExpect(jsonPath("$.accion.requiereTecnico").value(false));
+
+        avanzar(ronald, codigo, "{\"estado\":\"En revisión\"}");
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", ronald)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"Asignado\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.tecnicoId").value("Elige al técnico que la atenderá."));
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", ronald)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estado\":\"Asignado\",\"tecnicoId\":" + carlosId + "}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.tecnicoId").value("Elige un técnico activo de esta área."));
+
+        avanzar(ronald, codigo, "{\"estado\":\"Asignado\",\"tecnicoId\":" + dianaId + "}");
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", andrea)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"Cerrado\"}"))
+                .andExpect(status().isConflict());
+
+        avanzar(diana, codigo, "{\"estado\":\"En proceso\",\"nota\":\"Ya revisé la llave.\"}");
+        avanzar(diana, codigo, "{\"estado\":\"Resuelto\"}");
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", andrea)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"Cerrado\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("Cerrado"))
+                .andExpect(jsonPath("$.tecnico").value("Diana Cárdenas"))
+                .andExpect(jsonPath("$.accion").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.historial", hasSize(6)))
+                .andExpect(jsonPath("$.historial[3].nota").value("Ya revisé la llave."))
+                .andExpect(jsonPath("$.historial[3].estadoOrigen").value("Asignado"))
+                .andExpect(jsonPath("$.historial[5].estadoDestino").value("Cerrado"));
+
+        mvc.perform(get("/api/solicitudes/area").header("Authorization", ronald))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.codigo == '" + codigo + "')].estado").value(contains("Cerrado")));
+        mvc.perform(get("/api/solicitudes/asignadas").header("Authorization", diana))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.codigo == '" + codigo + "')].tecnico").value(contains("Diana Cárdenas")));
+        mvc.perform(get("/api/solicitudes/tecnicos").header("Authorization", ronald))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.nombres == 'Diana Cárdenas')]").exists());
+
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", tokenDe("lucia.ramos@unmsm.edu.pe")))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", tokenDe("marcos.vidal@unmsm.edu.pe"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"En revisión\"}"))
+                .andExpect(status().isConflict());
+        mvc.perform(get("/api/solicitudes/todas").header("Authorization", tokenDe("marcos.vidal@unmsm.edu.pe")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.codigo == '" + codigo + "')].estado").value(contains("Cerrado")));
+        mvc.perform(get("/api/solicitudes/todas").header("Authorization", andrea)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/solicitudes/area").header("Authorization", andrea)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/solicitudes/asignadas").header("Authorization", ronald)).andExpect(status().isForbidden());
+    }
+
+    private void avanzar(String token, String codigo, String cuerpo) throws Exception {
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isOk());
     }
 }

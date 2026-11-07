@@ -54,6 +54,16 @@ export type Movimiento = {
   fecha: string
 }
 
+export type AccionDisponible = {
+  estado: Estado
+  requiereTecnico: boolean
+}
+
+export type TecnicoOpcion = {
+  id: number
+  nombres: string
+}
+
 export type SolicitudDetalle = Omit<SolicitudResumen, 'ultimaActualizacion'> & {
   descripcion: string
   solicitante: string
@@ -62,6 +72,7 @@ export type SolicitudDetalle = Omit<SolicitudResumen, 'ultimaActualizacion'> & {
   ambiente: string | null
   evidencias: EvidenciaDetalle[]
   historial: Movimiento[]
+  accion: AccionDisponible | null
 }
 
 export type SolicitudRegistrada = {
