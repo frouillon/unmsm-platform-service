@@ -2,11 +2,13 @@ package gs.unmsm.platform.modules.solicitud.controller;
 
 import gs.unmsm.platform.common.security.UsuarioAutenticado;
 import gs.unmsm.platform.modules.solicitud.dto.AvanzarSolicitudRequest;
+import gs.unmsm.platform.modules.solicitud.dto.CrearComentarioRequest;
 import gs.unmsm.platform.modules.solicitud.dto.RegistrarSolicitudRequest;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudRegistradaResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudResumenResponse;
 import gs.unmsm.platform.modules.solicitud.dto.TecnicoResponse;
+import gs.unmsm.platform.modules.solicitud.service.ComentarioService;
 import gs.unmsm.platform.modules.solicitud.service.SolicitudConsultaService;
 import gs.unmsm.platform.modules.solicitud.service.SolicitudFlujoService;
 import gs.unmsm.platform.modules.solicitud.service.SolicitudService;
@@ -48,6 +50,7 @@ public class SolicitudController {
 
     private final SolicitudService solicitudService;
     private final SolicitudConsultaService consultaService;
+    private final ComentarioService comentarioService;
     private final SolicitudFlujoService flujoService;
 
     /** Multipart: parte "solicitud" (JSON) y, opcionalmente, partes "evidencias" (PNG, JPG o PDF). */
@@ -188,10 +191,33 @@ public class SolicitudController {
         return consultaService.detalle(usuario, codigo);
     }
 
+    @PostMapping("/{codigo}/comentarios")
+    @PreAuthorize("hasAnyRole('ESTUDIANTE', 'TECNICO', 'SUPERVISOR', 'ADMINISTRADOR')")
+    @Operation(
+            summary = "Publicar un comentario",
+            description = "Cualquier usuario con acceso a la solicitud puede comentar, excepto si ya está **Cerrada**. "
+                    + "Devuelve el detalle actualizado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Comentario publicado; devuelve el detalle completo."),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/Forbidden"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NotFound"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflict")
+    })
+    public SolicitudDetalleResponse comentar(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Parameter(description = "Código único de la solicitud.", example = "SOL-2026-0001")
+            @PathVariable String codigo,
+            @Valid @RequestBody CrearComentarioRequest request) {
+        comentarioService.comentar(usuario, codigo, request);
+        return consultaService.detalle(usuario, codigo);
+    }
+
     @GetMapping("/{codigo}")
     @Operation(
             summary = "Obtener el detalle de una solicitud",
-            description = "Devuelve la solicitud con sus evidencias, historial y la siguiente acción disponible. "
+            description = "Devuelve la solicitud con evidencias, comentarios, historial y la siguiente acción disponible. "
                     + "El acceso depende del rol: estudiante (propia), técnico (asignada), supervisor (su área) y administrador (todas).")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Detalle de la solicitud."),

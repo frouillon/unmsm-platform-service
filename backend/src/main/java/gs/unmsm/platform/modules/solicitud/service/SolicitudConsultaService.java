@@ -4,6 +4,7 @@ import gs.unmsm.platform.common.exception.ResourceNotFoundException;
 import gs.unmsm.platform.common.security.UsuarioAutenticado;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse.AccionResponse;
+import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse.ComentarioResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse.EvidenciaResponse;
 import gs.unmsm.platform.modules.solicitud.dto.SolicitudDetalleResponse.MovimientoResponse;
 import gs.unmsm.platform.modules.solicitud.dto.TecnicoResponse;
@@ -12,6 +13,7 @@ import gs.unmsm.platform.modules.solicitud.model.Evidencia;
 import gs.unmsm.platform.modules.solicitud.model.Solicitud;
 import gs.unmsm.platform.modules.solicitud.repository.EvidenciaRepository;
 import gs.unmsm.platform.modules.solicitud.repository.SolicitudRepository;
+import gs.unmsm.platform.modules.trazabilidad.repository.ComentarioRepository;
 import gs.unmsm.platform.modules.trazabilidad.repository.HistorialEstadoRepository;
 import gs.unmsm.platform.modules.trazabilidad.repository.HistorialEstadoRepository.UltimoMovimiento;
 import gs.unmsm.platform.modules.usuario.model.RolNombre;
@@ -36,6 +38,7 @@ public class SolicitudConsultaService {
 
     private final SolicitudRepository solicitudes;
     private final HistorialEstadoRepository historial;
+    private final ComentarioRepository comentarios;
     private final EvidenciaRepository evidencias;
     private final EvidenciaStorage storage;
     private final UsuarioRepository usuarios;
@@ -97,6 +100,15 @@ public class SolicitudConsultaService {
                         h.getEstadoDestino().getNombre(), h.getUsuario().getNombres(), h.getRolUsuario(),
                         h.getNotaTecnica(), h.getFechaRegistro()))
                 .toList();
+        List<ComentarioResponse> hilos = comentarios.findBySolicitudIdOrderByFechaCreacionAscIdAsc(s.getId())
+                .stream()
+                .map(c -> new ComentarioResponse(
+                        c.getId(),
+                        c.getAutor().getNombres(),
+                        c.getAutor().getRol().getNombre(),
+                        c.getContenido(),
+                        c.getFechaCreacion()))
+                .toList();
         AccionResponse accion = TransicionSolicitud.siguiente(usuario.rol(), s.getEstado().getNombre())
                 .map(paso -> new AccionResponse(paso.destino(), paso.requiereTecnico(), paso.requiereNota()))
                 .orElse(null);
@@ -104,7 +116,7 @@ public class SolicitudConsultaService {
                 s.getCategoria().getNombre(), s.getArea().getNombre(), s.getPrioridad().getNombre(),
                 s.getEstado().getNombre(), s.getSolicitante().getNombres(),
                 s.getTecnico() == null ? null : s.getTecnico().getNombres(), s.getPabellon(), s.getNivel(),
-                s.getAmbiente(), s.getFechaCreacion(), s.getFechaVencimiento(), adjuntos, movimientos, accion);
+                s.getAmbiente(), s.getFechaCreacion(), s.getFechaVencimiento(), adjuntos, movimientos, hilos, accion);
     }
 
     private List<SolicitudResumenResponse> resumir(List<Solicitud> lista) {
