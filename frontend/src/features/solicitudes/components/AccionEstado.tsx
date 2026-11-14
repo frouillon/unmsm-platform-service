@@ -4,9 +4,10 @@ import { Field, FieldError } from '../../../components/ui/Field'
 import { Icon } from '../../../components/ui/Icon'
 import { inputClass } from '../../../components/ui/inputClass'
 import { ApiError } from '../../../lib/api'
+import type { Estado } from '../../../lib/domain'
 import { useApi } from '../../../lib/useApi'
 import { avanzarSolicitud, fetchTecnicos } from '../solicitudesApi'
-import type { AccionDisponible, Estado } from '../types'
+import type { AccionDisponible } from '../types'
 
 const TEXTOS: Record<Estado, { titulo: string; ayuda: string; boton: string }> = {
   Pendiente: { titulo: 'Registrar', ayuda: '', boton: 'Registrar' },
