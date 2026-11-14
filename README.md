@@ -50,3 +50,14 @@ npm run dev
 
 Queda en http://localhost:5173. En desarrollo las llamadas a `/api` se reenvían al backend, así que levanta el backend antes.
 
+## Pruebas
+
+```bash
+cd backend
+./mvnw test        # necesita MySQL encendido; cobertura en target/site/jacoco/index.html
+
+cd frontend
+npm test           # necesita Node.js 22.12 o superior
+```
+
+En GitHub se ejecutan solas en cada push a `main` y en cada pull request (`.github/workflows/ci.yml`). El detalle de los casos y de las técnicas usadas está en [PRUEBAS.md](PRUEBAS.md).
