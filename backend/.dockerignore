@@ -1,0 +1,13 @@
+target
+.git
+.gitignore
+.env
+uploads
+*.md
+.idea
+.vscode
+.settings
+.classpath
+.project
+.factorypath
+HELP.md
