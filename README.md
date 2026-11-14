@@ -20,6 +20,15 @@ Si tu MySQL usa otra contraseña, crea `backend/.env`:
 DB_PASSWORD=tu_contraseña
 ```
 
+## Documentación de la API
+
+Con el backend en marcha:
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- Contrato OpenAPI (JSON): http://localhost:8080/v3/api-docs
+- Contrato OpenAPI (YAML): http://localhost:8080/v3/api-docs.yaml
+- Documento, especificación exportada y colección Postman: [docs/fase-3/api/README.md](docs/fase-3/api/README.md)
+
 ## Backend
 
 En una terminal, desde la carpeta del proyecto:
