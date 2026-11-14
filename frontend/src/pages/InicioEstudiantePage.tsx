@@ -4,10 +4,13 @@ import { Icon } from '../components/ui/Icon'
 import { LoadError } from '../components/ui/LoadError'
 import { PlazoTag } from '../components/ui/PlazoTag'
 import { useAuth } from '../features/auth/useAuth'
+import { resumenEstudiante } from '../features/dashboard/conteos'
+import { fetchDashboard } from '../features/dashboard/dashboardApi'
+import { IndicadoresInicio } from '../features/dashboard/IndicadoresInicio'
 import { EstadoDot } from '../features/solicitudes/components/EstadoDot'
 import { fetchMisSolicitudes } from '../features/solicitudes/solicitudesApi'
 import { haceTiempo } from '../lib/format'
-import { calcularPlazo, estaAtendida } from '../lib/plazo'
+import { estaAtendida } from '../lib/plazo'
 import { useApi } from '../lib/useApi'
 
 const ACCESOS = [
@@ -22,13 +25,13 @@ const MAX_ACTIVAS = 5
 export function InicioEstudiantePage() {
   const { usuario } = useAuth()
   const solicitudes = useApi(fetchMisSolicitudes, 'mis-solicitudes')
+  const indicadores = useApi(fetchDashboard, 'dashboard-estudiante')
   const nombre = usuario?.nombres.split(' ')[0] ?? ''
 
   const activas = (solicitudes.data ?? [])
     .filter((s) => !estaAtendida(s.estado))
     .sort((a, b) => a.fechaVencimiento.localeCompare(b.fechaVencimiento))
-  const atendidas = (solicitudes.data ?? []).length - activas.length
-  const vencidas = activas.filter((s) => calcularPlazo(s.fechaVencimiento, s.estado).tono === 'bad').length
+  const conteos = indicadores.status === 'success' ? resumenEstudiante(indicadores.data) : []
 
   return (
     <div className="mx-auto max-w-[1120px]">
@@ -63,6 +66,8 @@ export function InicioEstudiantePage() {
           </Link>
         ))}
       </nav>
+
+      {indicadores.status === 'success' && <IndicadoresInicio data={indicadores.data} />}
 
       <div className="mb-2 flex items-end justify-between">
         <h2 className="text-2xl font-bold">Solicitudes activas</h2>
@@ -119,22 +124,14 @@ export function InicioEstudiantePage() {
         </ul>
       )}
 
-      {solicitudes.status === 'success' && solicitudes.data.length > 0 && (
+      {conteos.length > 0 && (
         <p className="mt-5 flex flex-wrap gap-[26px] text-xs text-muted">
-          <span>
-            <b className="mr-1 text-sm text-ink">{activas.length}</b>
-            {activas.length === 1 ? 'activa' : 'activas'}
-          </span>
-          {vencidas > 0 && (
-            <span className="text-bad">
-              <b className="mr-1 text-sm">{vencidas}</b>
-              {vencidas === 1 ? 'vencida' : 'vencidas'}
+          {conteos.map((c) => (
+            <span key={c.varios} className={c.tono === 'bad' && c.valor > 0 ? 'text-bad' : undefined}>
+              <b className={`mr-1 text-sm ${c.tono === 'bad' && c.valor > 0 ? '' : 'text-ink'}`}>{c.valor}</b>
+              {c.valor === 1 ? c.uno : c.varios}
             </span>
-          )}
-          <span>
-            <b className="mr-1 text-sm text-ink">{atendidas}</b>
-            {atendidas === 1 ? 'atendida' : 'atendidas'}
-          </span>
+          ))}
         </p>
       )}
     </div>

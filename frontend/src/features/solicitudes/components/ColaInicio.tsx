@@ -4,14 +4,16 @@ import { Icon } from '../../../components/ui/Icon'
 import { LoadError } from '../../../components/ui/LoadError'
 import { PlazoTag } from '../../../components/ui/PlazoTag'
 import { useAuth } from '../../auth/useAuth'
+import { fetchDashboard } from '../../dashboard/dashboardApi'
+import { IndicadoresInicio } from '../../dashboard/IndicadoresInicio'
+import type { PieResumen } from '../../dashboard/conteos'
+import type { Dashboard } from '../../dashboard/types'
 import { haceTiempo } from '../../../lib/format'
 import { useApi } from '../../../lib/useApi'
 import { EstadoDot } from './EstadoDot'
 import type { SolicitudResumen } from '../types'
 
 const MAX = 5
-
-type Conteo = { valor: number; uno: string; varios: string; tono?: 'bad' }
 
 export function ColaInicio({
   subtitulo,
@@ -32,14 +34,15 @@ export function ColaInicio({
   tituloLista: string
   esVisible: (solicitud: SolicitudResumen) => boolean
   vacio: { titulo: string; descripcion: string }
-  resumen: (lista: SolicitudResumen[]) => Conteo[]
+  resumen: (dash: Dashboard) => PieResumen[]
 }) {
   const { usuario } = useAuth()
   const solicitudes = useApi(fetcher, cacheKey)
+  const indicadores = useApi(fetchDashboard, `dashboard-${cacheKey}`)
   const nombre = usuario?.nombres.split(' ')[0] ?? ''
   const lista = solicitudes.data ?? []
   const visibles = lista.filter(esVisible).sort((a, b) => a.fechaVencimiento.localeCompare(b.fechaVencimiento))
-  const conteos = solicitudes.status === 'success' ? resumen(lista) : []
+  const conteos = indicadores.status === 'success' ? resumen(indicadores.data) : []
 
   return (
     <div className="mx-auto max-w-[1120px]">
@@ -47,6 +50,8 @@ export function ColaInicio({
         <h1 className="text-[42px] leading-tight font-bold max-[700px]:text-[34px]">Hola, {nombre}.</h1>
         <p className="mt-[7px] text-[15px] text-muted">{subtitulo}</p>
       </div>
+
+      {indicadores.status === 'success' && <IndicadoresInicio data={indicadores.data} />}
 
       <div className="mb-3 flex items-end justify-between gap-4">
         <h2 className="text-lg font-semibold">{tituloLista}</h2>

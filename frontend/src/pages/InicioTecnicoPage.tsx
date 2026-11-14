@@ -1,6 +1,6 @@
+import { resumenTecnico } from '../features/dashboard/conteos'
 import { ColaInicio } from '../features/solicitudes/components/ColaInicio'
 import { fetchAsignadas } from '../features/solicitudes/solicitudesApi'
-import { estaAtendida } from '../lib/plazo'
 
 export function InicioTecnicoPage() {
   return (
@@ -16,11 +16,7 @@ export function InicioTecnicoPage() {
         titulo: 'No tienes solicitudes a cargo',
         descripcion: 'Cuando te asignen una solicitud, podrás atenderla desde aquí.',
       }}
-      resumen={(lista) => [
-        { valor: lista.filter((s) => s.estado === 'Asignado').length, uno: 'por atender', varios: 'por atender' },
-        { valor: lista.filter((s) => s.estado === 'En proceso').length, uno: 'en proceso', varios: 'en proceso' },
-        { valor: lista.filter((s) => estaAtendida(s.estado)).length, uno: 'atendida', varios: 'atendidas' },
-      ]}
+      resumen={resumenTecnico}
     />
   )
 }
