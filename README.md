@@ -40,6 +40,15 @@ Si tu MySQL usa otra contraseña, crea `backend/.env`:
 DB_PASSWORD=tu_contraseña
 ```
 
+## Ambientes y secretos
+
+- **Local / Docker de desarrollo:** defaults en `application.properties` (cómodos para el equipo).
+- **Cloud / demo pública:** activa el perfil `prod` con `SPRING_PROFILES_ACTIVE=prod`.
+  Ahí **obligas** `DB_PASSWORD`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS` y `APP_PUBLIC_URL`
+  (sin valores por defecto inseguros). El seed de usuarios demo queda apagado salvo que lo actives.
+
+Plantilla de variables: [`.env.example`](.env.example). El archivo `.env` no se sube al repo.
+
 ## Documentación de la API
 
 Con el backend en marcha:
