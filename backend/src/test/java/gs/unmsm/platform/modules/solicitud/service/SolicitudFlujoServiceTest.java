@@ -184,6 +184,37 @@ class SolicitudFlujoServiceTest {
         assertThat(movimiento.getFechaRegistro()).isEqualTo(AHORA);
     }
 
+    @Test
+    void marcarComoResueltaSinNotaSeRechaza() {
+        Usuario tecnico = usuario(33L, RolNombre.TECNICO, mantenimiento, true);
+        UsuarioAutenticado sesionDelTecnico =
+                new UsuarioAutenticado(33L, "Diana Cárdenas", RolNombre.TECNICO, mantenimiento.getId());
+        Solicitud solicitud = solicitudDeMantenimientoEn(EstadoNombre.EN_PROCESO);
+        solicitud.setTecnico(tecnico);
+        when(solicitudes.findByCodigo(CODIGO)).thenReturn(Optional.of(solicitud));
+        when(usuarios.findById(33L)).thenReturn(Optional.of(tecnico));
+
+        assertThatThrownBy(() -> servicio.avanzar(sesionDelTecnico, CODIGO, pasarA(EstadoNombre.RESUELTO)))
+                .isInstanceOf(FieldValidationException.class)
+                .hasMessage("Escribe una nota técnica al marcar como resuelta.");
+
+        assertThat(solicitud.getEstado().getNombre()).isEqualTo(EstadoNombre.EN_PROCESO);
+        verify(historial, never()).save(any(HistorialEstado.class));
+    }
+
+    @Test
+    void elSupervisorPuedeCerrarUnaSolicitudResuelta() {
+        Solicitud solicitud = solicitudDeMantenimientoEn(EstadoNombre.RESUELTO);
+        Estado cerrado = estado(EstadoNombre.CERRADO);
+        cuandoElSupervisorAbre(solicitud);
+        when(estados.findByNombre(EstadoNombre.CERRADO)).thenReturn(Optional.of(cerrado));
+
+        servicio.avanzar(sesionDelSupervisor, CODIGO, pasarA(EstadoNombre.CERRADO));
+
+        assertThat(solicitud.getEstado()).isSameAs(cerrado);
+        verify(historial).save(any(HistorialEstado.class));
+    }
+
     // --- Preparación de los escenarios -------------------------------------------------------
 
     /** El supervisor de Mantenimiento, con su cuenta activa, abre la solicitud indicada. */

@@ -286,7 +286,15 @@ class SolicitudControllerTest {
                 .andExpect(status().isConflict());
 
         avanzar(diana, codigo, "{\"estado\":\"En proceso\",\"nota\":\"Ya revisé la llave.\"}");
-        avanzar(diana, codigo, "{\"estado\":\"Resuelto\"}");
+        mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", diana)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"Resuelto\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.nota").value("Escribe una nota técnica al marcar como resuelta."));
+        avanzar(diana, codigo, "{\"estado\":\"Resuelto\",\"nota\":\"Se cambió la llave del lavadero.\"}");
+        mvc.perform(get("/api/solicitudes/" + codigo).header("Authorization", ronald))
+                .andExpect(jsonPath("$.estado").value("Resuelto"))
+                .andExpect(jsonPath("$.accion.estado").value("Cerrado"))
+                .andExpect(jsonPath("$.accion.requiereNota").value(false));
         mvc.perform(post("/api/solicitudes/" + codigo + "/estado").header("Authorization", andrea)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"Cerrado\"}"))
                 .andExpect(status().isOk())

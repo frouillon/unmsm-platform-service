@@ -68,7 +68,10 @@ public record SolicitudDetalleResponse(
             String estado,
 
             @Schema(description = "Indica si la transición exige elegir un técnico.", example = "false")
-            boolean requiereTecnico
+            boolean requiereTecnico,
+
+            @Schema(description = "Indica si la transición exige una nota técnica.", example = "false")
+            boolean requiereNota
     ) {
     }
 

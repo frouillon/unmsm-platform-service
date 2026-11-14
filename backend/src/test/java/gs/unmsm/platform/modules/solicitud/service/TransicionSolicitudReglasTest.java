@@ -44,7 +44,7 @@ class TransicionSolicitudReglasTest {
     @Test
     void soloElPasoHaciaAsignadoExigeElegirTecnico() {
         assertThat(TransicionSolicitud.siguiente(RolNombre.SUPERVISOR, EstadoNombre.EN_REVISION))
-                .contains(new TransicionSolicitud.Paso(EstadoNombre.ASIGNADO, true));
+                .contains(new TransicionSolicitud.Paso(EstadoNombre.ASIGNADO, true, false));
 
         for (String rol : ROLES) {
             for (String estado : ESTADOS) {
@@ -54,5 +54,21 @@ class TransicionSolicitudReglasTest {
                                 .isEqualTo(EstadoNombre.ASIGNADO.equals(paso.destino())));
             }
         }
+    }
+
+    @Test
+    void pasarAResueltoExigeNotaTecnica() {
+        assertThat(TransicionSolicitud.siguiente(RolNombre.TECNICO, EstadoNombre.EN_PROCESO))
+                .contains(new TransicionSolicitud.Paso(EstadoNombre.RESUELTO, false, true));
+        assertThat(TransicionSolicitud.siguiente(RolNombre.SUPERVISOR, EstadoNombre.EN_PROCESO))
+                .contains(new TransicionSolicitud.Paso(EstadoNombre.RESUELTO, false, true));
+    }
+
+    @Test
+    void supervisorYAdminPuedenCerrarUnaSolicitudResuelta() {
+        assertThat(TransicionSolicitud.siguiente(RolNombre.SUPERVISOR, EstadoNombre.RESUELTO))
+                .contains(new TransicionSolicitud.Paso(EstadoNombre.CERRADO, false, false));
+        assertThat(TransicionSolicitud.siguiente(RolNombre.ADMINISTRADOR, EstadoNombre.RESUELTO))
+                .contains(new TransicionSolicitud.Paso(EstadoNombre.CERRADO, false, false));
     }
 }

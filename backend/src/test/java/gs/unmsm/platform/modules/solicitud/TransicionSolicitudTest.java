@@ -28,6 +28,14 @@ class TransicionSolicitudTest {
         assertThat(TransicionSolicitud.siguiente(RolNombre.ESTUDIANTE, EstadoNombre.RESUELTO))
                 .hasValueSatisfying(p -> assertThat(p.destino()).isEqualTo(EstadoNombre.CERRADO));
 
+        assertThat(TransicionSolicitud.siguiente(RolNombre.SUPERVISOR, EstadoNombre.EN_PROCESO))
+                .hasValueSatisfying(p -> {
+                    assertThat(p.destino()).isEqualTo(EstadoNombre.RESUELTO);
+                    assertThat(p.requiereNota()).isTrue();
+                });
+        assertThat(TransicionSolicitud.siguiente(RolNombre.SUPERVISOR, EstadoNombre.RESUELTO))
+                .hasValueSatisfying(p -> assertThat(p.destino()).isEqualTo(EstadoNombre.CERRADO));
+
         assertThat(TransicionSolicitud.siguiente(RolNombre.ESTUDIANTE, EstadoNombre.PENDIENTE)).isEmpty();
         assertThat(TransicionSolicitud.siguiente(RolNombre.SUPERVISOR, EstadoNombre.ASIGNADO)).isEmpty();
         assertThat(TransicionSolicitud.siguiente(RolNombre.TECNICO, EstadoNombre.RESUELTO)).isEmpty();
