@@ -12,6 +12,7 @@ import { InicioTecnicoPage } from '../pages/InicioTecnicoPage'
 import { LoginPage } from '../pages/LoginPage'
 import { MisSolicitudesPage } from '../pages/MisSolicitudesPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { NotificacionesPage } from '../pages/NotificacionesPage'
 import { NuevaSolicitudPage } from '../pages/NuevaSolicitudPage'
 import { SectionPlaceholder as Section } from '../pages/SectionPlaceholder'
 import { SolicitudesAdminPage } from '../pages/SolicitudesAdminPage'
@@ -93,10 +94,7 @@ export const router = createBrowserRouter([
               element: <Section title="Configuración" subtitle="Administra los catálogos y reglas que usa todo el sistema." icon="sliders" />,
             },
           ]),
-          {
-            path: '/notificaciones',
-            element: <Section title="Notificaciones" subtitle="Avisos sobre el avance de tus solicitudes." icon="bell" />,
-          },
+          { path: '/notificaciones', element: <NotificacionesPage /> },
           {
             path: '/perfil',
             element: <Section title="Perfil" subtitle="Tu cuenta institucional en San Marcos Servicios." icon="user" />,

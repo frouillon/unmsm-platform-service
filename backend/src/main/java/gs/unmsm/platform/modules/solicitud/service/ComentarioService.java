@@ -4,6 +4,7 @@ import gs.unmsm.platform.common.exception.BusinessRuleException;
 import gs.unmsm.platform.common.exception.ResourceNotFoundException;
 import gs.unmsm.platform.common.exception.UnauthorizedException;
 import gs.unmsm.platform.common.security.UsuarioAutenticado;
+import gs.unmsm.platform.modules.notificacion.service.NotificacionService;
 import gs.unmsm.platform.modules.solicitud.dto.CrearComentarioRequest;
 import gs.unmsm.platform.modules.solicitud.model.EstadoNombre;
 import gs.unmsm.platform.modules.solicitud.model.Solicitud;
@@ -27,6 +28,7 @@ public class ComentarioService {
     private final SolicitudRepository solicitudes;
     private final ComentarioRepository comentarios;
     private final UsuarioRepository usuarios;
+    private final NotificacionService notificaciones;
     private final Clock clock;
 
     @Transactional
@@ -50,5 +52,6 @@ public class ComentarioService {
                 .contenido(request.contenido())
                 .fechaCreacion(ahora)
                 .build());
+        notificaciones.avisarComentario(solicitud, autor);
     }
 }

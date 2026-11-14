@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { Icon } from '../../components/ui/Icon'
 import { iniciales } from '../../lib/domain'
+import { fetchNoLeidas } from '../notificaciones/notificacionesApi'
 import type { UsuarioActual } from '../auth/types'
 import { NAVIGATION } from './navigation'
 
@@ -17,8 +18,24 @@ type TopbarProps = {
 
 export function Topbar({ usuario, onMenu, onLogout }: TopbarProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [params] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') ?? '')
+  const [noLeidas, setNoLeidas] = useState(0)
+
+  useEffect(() => {
+    let vigente = true
+    fetchNoLeidas()
+      .then((r) => {
+        if (vigente) setNoLeidas(r.cantidad)
+      })
+      .catch(() => {
+        if (vigente) setNoLeidas(0)
+      })
+    return () => {
+      vigente = false
+    }
+  }, [location.pathname])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -50,8 +67,17 @@ export function Topbar({ usuario, onMenu, onLogout }: TopbarProps) {
 
       <span className="flex-1" />
 
-      <Link to="/notificaciones" aria-label="Notificaciones" className={iconButton}>
+      <Link
+        to="/notificaciones"
+        aria-label={noLeidas > 0 ? `Notificaciones, ${noLeidas} sin leer` : 'Notificaciones'}
+        className={`relative ${iconButton}`}
+      >
         <Icon name="bell" />
+        {noLeidas > 0 && (
+          <span className="absolute top-1 right-1 grid min-w-[16px] place-items-center rounded-full bg-bad px-1 text-[10px] font-bold leading-4 text-white">
+            {noLeidas > 9 ? '9+' : noLeidas}
+          </span>
+        )}
       </Link>
       <button type="button" onClick={onLogout} aria-label="Cerrar sesión" className={iconButton}>
         <Icon name="logout" />

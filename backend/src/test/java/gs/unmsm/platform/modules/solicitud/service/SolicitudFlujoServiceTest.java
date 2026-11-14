@@ -4,6 +4,7 @@ import gs.unmsm.platform.common.exception.BusinessRuleException;
 import gs.unmsm.platform.common.exception.FieldValidationException;
 import gs.unmsm.platform.common.exception.UnauthorizedException;
 import gs.unmsm.platform.common.security.UsuarioAutenticado;
+import gs.unmsm.platform.modules.notificacion.service.NotificacionService;
 import gs.unmsm.platform.modules.solicitud.dto.AvanzarSolicitudRequest;
 import gs.unmsm.platform.modules.solicitud.model.Estado;
 import gs.unmsm.platform.modules.solicitud.model.EstadoNombre;
@@ -58,6 +59,8 @@ class SolicitudFlujoServiceTest {
     UsuarioRepository usuarios;
     @Mock
     HistorialEstadoRepository historial;
+    @Mock
+    NotificacionService notificaciones;
 
     private SolicitudFlujoService servicio;
 
@@ -72,7 +75,7 @@ class SolicitudFlujoServiceTest {
     @BeforeEach
     void crearServicio() {
         Clock relojFijo = Clock.fixed(AHORA.atZone(LIMA).toInstant(), LIMA);
-        servicio = new SolicitudFlujoService(solicitudes, estados, usuarios, historial, relojFijo);
+        servicio = new SolicitudFlujoService(solicitudes, estados, usuarios, historial, notificaciones, relojFijo);
     }
 
     @Test
@@ -182,6 +185,7 @@ class SolicitudFlujoServiceTest {
         assertThat(movimiento.getRolUsuario()).isEqualTo(RolNombre.SUPERVISOR);
         assertThat(movimiento.getNotaTecnica()).isEqualTo("Se revisará mañana.");
         assertThat(movimiento.getFechaRegistro()).isEqualTo(AHORA);
+        verify(notificaciones).avisarCambioEstado(solicitud, supervisor, EstadoNombre.EN_REVISION);
     }
 
     @Test
@@ -227,6 +231,7 @@ class SolicitudFlujoServiceTest {
         assertThat(solicitud.getTecnico()).isNull();
         assertThat(solicitud.getEstado().getNombre()).isEqualTo(EstadoNombre.EN_REVISION);
         verify(historial, never()).save(any(HistorialEstado.class));
+        verify(notificaciones, never()).avisarCambioEstado(any(), any(), any());
     }
 
     private Solicitud solicitudDeMantenimientoEn(String nombreDelEstado) {
