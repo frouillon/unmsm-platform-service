@@ -4,6 +4,26 @@ Aplicación de solicitudes de la UNMSM. El backend es Spring Boot y el frontend 
 
 ## Requisitos
 
+### Con Docker (recomendado para demo)
+
+- Docker Desktop (o Docker Engine + Compose v2)
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Queda en http://localhost (frontend). La API también responde en http://localhost:8080.
+Swagger: http://localhost/swagger-ui/index.html (vía proxy) o http://localhost:8080/swagger-ui/index.html.
+
+Para detener:
+
+```bash
+docker compose down
+```
+
+### Sin Docker (desarrollo local)
+
 - Java 17
 - Node.js 20 o superior
 - MySQL 8 en `localhost:3306`
