@@ -26,6 +26,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_servicios_unmsm?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
@@ -33,6 +34,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-FAtZEQgt9DoTfroMggQgC4TeYLGSK/HL6cJflW+WBaQNpOpaC2DML5X7qvFe6amE}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-480}
       APP_TIMEZONE: ${APP_TIMEZONE:-America/Lima}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:8080}
       EVIDENCIAS_DIR: /data/evidencias
       SEED_ENABLED: ${SEED_ENABLED:-true}
       DEMO_PASSWORD: ${DEMO_PASSWORD:-SanMarcos2026}
