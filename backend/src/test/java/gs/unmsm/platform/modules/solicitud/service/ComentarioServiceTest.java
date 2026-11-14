@@ -3,6 +3,7 @@ package gs.unmsm.platform.modules.solicitud.service;
 import gs.unmsm.platform.common.exception.BusinessRuleException;
 import gs.unmsm.platform.common.exception.ResourceNotFoundException;
 import gs.unmsm.platform.common.security.UsuarioAutenticado;
+import gs.unmsm.platform.modules.notificacion.service.NotificacionService;
 import gs.unmsm.platform.modules.solicitud.dto.CrearComentarioRequest;
 import gs.unmsm.platform.modules.solicitud.model.Estado;
 import gs.unmsm.platform.modules.solicitud.model.EstadoNombre;
@@ -42,6 +43,7 @@ class ComentarioServiceTest {
     @Mock SolicitudRepository solicitudes;
     @Mock ComentarioRepository comentarios;
     @Mock UsuarioRepository usuarios;
+    @Mock NotificacionService notificaciones;
 
     private ComentarioService servicio;
     private final Usuario andrea = Usuario.builder()
@@ -56,7 +58,7 @@ class ComentarioServiceTest {
     @BeforeEach
     void crearServicio() {
         Clock reloj = Clock.fixed(AHORA.atZone(LIMA).toInstant(), LIMA);
-        servicio = new ComentarioService(solicitudes, comentarios, usuarios, reloj);
+        servicio = new ComentarioService(solicitudes, comentarios, usuarios, notificaciones, reloj);
     }
 
     @Test
@@ -73,6 +75,7 @@ class ComentarioServiceTest {
         assertThat(guardado.getValue().getAutor()).isSameAs(andrea);
         assertThat(guardado.getValue().getSolicitud()).isSameAs(solicitud);
         assertThat(guardado.getValue().getFechaCreacion()).isEqualTo(AHORA);
+        verify(notificaciones).avisarComentario(solicitud, andrea);
     }
 
     @Test
