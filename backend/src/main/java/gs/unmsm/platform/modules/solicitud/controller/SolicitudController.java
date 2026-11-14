@@ -165,11 +165,11 @@ public class SolicitudController {
 
                     | Rol | Transición permitida |
                     |---|---|
-                    | SUPERVISOR / ADMINISTRADOR | Pendiente → En revisión → Asignado (requiere `tecnicoId`) |
-                    | TECNICO | Asignado → En proceso → Resuelto |
+                    | SUPERVISOR / ADMINISTRADOR | Pendiente → En revisión → Asignado (requiere `tecnicoId`); En proceso → Resuelto (requiere nota); Resuelto → Cerrado |
+                    | TECNICO | Asignado → En proceso → Resuelto (requiere nota) |
                     | ESTUDIANTE | Resuelto → Cerrado |
 
-                    La nota es opcional y queda registrada en el historial.
+                    Al pasar a **Resuelto** la nota técnica es obligatoria. En los demás pasos es opcional.
                     """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Solicitud actualizada; devuelve el detalle completo."),

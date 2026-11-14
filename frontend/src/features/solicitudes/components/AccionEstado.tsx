@@ -28,7 +28,7 @@ const TEXTOS: Record<Estado, { titulo: string; ayuda: string; boton: string }> =
   },
   Resuelto: {
     titulo: 'Marcar como resuelta',
-    ayuda: 'Úsalo cuando el pedido ya quedó atendido.',
+    ayuda: 'Describe qué se hizo para atender el pedido. La nota técnica es obligatoria.',
     boton: 'Marcar como resuelta',
   },
   Cerrado: {
@@ -56,14 +56,20 @@ export function AccionEstado({
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [errorTecnico, setErrorTecnico] = useState('')
+  const [errorNota, setErrorNota] = useState('')
   const texto = TEXTOS[accion.estado]
   const lista = accion.requiereTecnico && tecnicos.status === 'success' ? tecnicos.data : []
 
   const enviar = async () => {
     setError('')
     setErrorTecnico('')
+    setErrorNota('')
     if (accion.requiereTecnico && !tecnicoId) {
       setErrorTecnico('Elige al técnico que la atenderá.')
+      return
+    }
+    if (accion.requiereNota && !nota.trim()) {
+      setErrorNota('Escribe una nota técnica al marcar como resuelta.')
       return
     }
     setEnviando(true)
@@ -73,7 +79,8 @@ export function AccionEstado({
     } catch (err) {
       const api = err instanceof ApiError ? err : new ApiError(0, 'Ocurrió un error inesperado.')
       setErrorTecnico(api.fieldErrors.tecnicoId ?? '')
-      setError(api.fieldErrors.tecnicoId ? '' : api.message)
+      setErrorNota(api.fieldErrors.nota ?? '')
+      setError(api.fieldErrors.tecnicoId || api.fieldErrors.nota ? '' : api.message)
     } finally {
       setEnviando(false)
     }
@@ -113,15 +120,23 @@ export function AccionEstado({
         </Field>
       )}
 
-      <Field id="accion-nota" label="Nota" optional className="mt-4">
+      <Field
+        id="accion-nota"
+        label={accion.requiereNota ? 'Nota técnica' : 'Nota'}
+        optional={!accion.requiereNota}
+        required={accion.requiereNota}
+        error={errorNota}
+        className="mt-4"
+      >
         <textarea
           id="accion-nota"
           value={nota}
           maxLength={500}
           rows={3}
           onChange={(e) => setNota(e.target.value)}
-          placeholder="Queda en el seguimiento"
-          className={`${inputClass(false)} h-auto py-2`}
+          placeholder={accion.requiereNota ? 'Qué se hizo para resolverla' : 'Queda en el seguimiento'}
+          aria-invalid={!!errorNota}
+          className={`${inputClass(!!errorNota)} h-auto py-2`}
         />
       </Field>
 

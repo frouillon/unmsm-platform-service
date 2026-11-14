@@ -98,7 +98,7 @@ public class SolicitudConsultaService {
                         h.getNotaTecnica(), h.getFechaRegistro()))
                 .toList();
         AccionResponse accion = TransicionSolicitud.siguiente(usuario.rol(), s.getEstado().getNombre())
-                .map(paso -> new AccionResponse(paso.destino(), paso.requiereTecnico()))
+                .map(paso -> new AccionResponse(paso.destino(), paso.requiereTecnico(), paso.requiereNota()))
                 .orElse(null);
         return new SolicitudDetalleResponse(s.getId(), s.getCodigo(), s.getAsunto(), s.getDescripcion(),
                 s.getCategoria().getNombre(), s.getArea().getNombre(), s.getPrioridad().getNombre(),

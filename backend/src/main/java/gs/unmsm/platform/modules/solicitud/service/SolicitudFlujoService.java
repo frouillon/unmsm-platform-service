@@ -55,6 +55,10 @@ public class SolicitudFlujoService {
             solicitud.setTecnico(tecnicoDelArea(request.tecnicoId(), solicitud));
         }
 
+        if (paso.requiereNota() && (request.nota() == null || request.nota().isBlank())) {
+            throw new FieldValidationException("nota", "Escribe una nota técnica al marcar como resuelta.");
+        }
+
         Estado destino = estados.findByNombre(paso.destino())
                 .orElseThrow(() -> new IllegalStateException("Falta el estado " + paso.destino()));
         Estado estadoOrigen = solicitud.getEstado();

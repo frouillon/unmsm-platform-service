@@ -57,6 +57,7 @@ export type Movimiento = {
 export type AccionDisponible = {
   estado: Estado
   requiereTecnico: boolean
+  requiereNota: boolean
 }
 
 export type TecnicoOpcion = {
