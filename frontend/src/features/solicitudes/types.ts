@@ -54,6 +54,14 @@ export type Movimiento = {
   fecha: string
 }
 
+export type Comentario = {
+  id: number
+  autor: string
+  rol: string
+  contenido: string
+  fecha: string
+}
+
 export type AccionDisponible = {
   estado: Estado
   requiereTecnico: boolean
@@ -73,6 +81,7 @@ export type SolicitudDetalle = Omit<SolicitudResumen, 'ultimaActualizacion'> & {
   ambiente: string | null
   evidencias: EvidenciaDetalle[]
   historial: Movimiento[]
+  comentarios: Comentario[]
   accion: AccionDisponible | null
 }
 

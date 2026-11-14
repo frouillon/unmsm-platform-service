@@ -41,6 +41,13 @@ export function avanzarSolicitud(
   })
 }
 
+export function crearComentario(codigo: string, contenido: string): Promise<SolicitudDetalle> {
+  return apiFetch(`/api/solicitudes/${encodeURIComponent(codigo)}/comentarios`, {
+    method: 'POST',
+    body: { contenido },
+  })
+}
+
 export function fetchSolicitud(codigo: string): Promise<SolicitudDetalle> {
   return apiFetch(`/api/solicitudes/${encodeURIComponent(codigo)}`)
 }

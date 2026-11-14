@@ -7,6 +7,7 @@ import { PlazoTag } from '../components/ui/PlazoTag'
 import { PriorityTag } from '../components/ui/PriorityTag'
 import { StatusChip } from '../components/ui/StatusChip'
 import { AccionEstado } from '../features/solicitudes/components/AccionEstado'
+import { ComentariosSolicitud } from '../features/solicitudes/components/ComentariosSolicitud'
 import { EvidenciasLista } from '../features/solicitudes/components/EvidenciasLista'
 import { Seguimiento } from '../features/solicitudes/components/Seguimiento'
 import { fetchSolicitud } from '../features/solicitudes/solicitudesApi'
@@ -123,6 +124,13 @@ export function DetalleSolicitudPage() {
             </h2>
             <EvidenciasLista codigo={s.codigo} evidencias={s.evidencias} />
           </section>
+
+          <ComentariosSolicitud
+            codigo={s.codigo}
+            comentarios={s.comentarios}
+            puedeComentar={s.estado !== 'Cerrado'}
+            onHecho={detalle.reload}
+          />
         </div>
 
         <aside className="grid gap-5">

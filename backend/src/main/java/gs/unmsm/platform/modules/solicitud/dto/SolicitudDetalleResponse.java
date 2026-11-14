@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Schema(description = "Detalle completo de una solicitud, con evidencias, historial y siguiente acción.")
+@Schema(description = "Detalle completo de una solicitud, con evidencias, comentarios, historial y siguiente acción.")
 public record SolicitudDetalleResponse(
         @Schema(description = "Identificador interno.", example = "15")
         Long id,
@@ -59,9 +59,30 @@ public record SolicitudDetalleResponse(
         @Schema(description = "Historial de cambios de estado.")
         List<MovimientoResponse> historial,
 
+        @Schema(description = "Comentarios de la solicitud, del más antiguo al más reciente.")
+        List<ComentarioResponse> comentarios,
+
         @Schema(description = "Siguiente acción que puede ejecutar el usuario; null si no le corresponde moverla.")
         AccionResponse accion
 ) {
+    @Schema(description = "Comentario publicado en la solicitud.")
+    public record ComentarioResponse(
+            @Schema(description = "Identificador del comentario.", example = "1")
+            Long id,
+
+            @Schema(description = "Nombre del autor.", example = "Andrea Mendoza")
+            String autor,
+
+            @Schema(description = "Rol del autor.", example = "ESTUDIANTE")
+            String rol,
+
+            @Schema(description = "Texto del comentario.", example = "¿Ya revisaron el proyector?")
+            String contenido,
+
+            @Schema(description = "Fecha de publicación.", example = "2026-11-14T10:15:00")
+            LocalDateTime fecha
+    ) {
+    }
     @Schema(description = "Siguiente transición disponible para el usuario autenticado.")
     public record AccionResponse(
             @Schema(description = "Estado de destino.", example = "En proceso")
