@@ -52,19 +52,30 @@ export function AppShell() {
         Saltar al contenido
       </a>
 
-      <Sidebar usuario={usuario} collapsed={collapsed} open={open} />
+      <div className="print:hidden">
+        <Sidebar usuario={usuario} collapsed={collapsed} open={open} />
+      </div>
       {open && (
         <div aria-hidden onClick={() => setOpen(false)} className="fixed inset-0 z-[25] bg-ink/35 lg:hidden" />
       )}
 
-      <div className={`transition-[margin] duration-200 sm:ml-[76px] ${collapsed ? '' : 'lg:ml-[264px]'}`}>
-        <Topbar usuario={usuario} onMenu={toggleMenu} onLogout={handleLogout} />
-        <main id="contenido" className="mx-auto max-w-[1220px] px-4 pt-6 pb-[100px] sm:px-6 sm:pb-16 lg:px-9 lg:pt-[38px]">
+      <div
+        className={`transition-[margin] duration-200 sm:ml-[76px] print:ml-0 ${collapsed ? '' : 'lg:ml-[264px]'}`}
+      >
+        <div className="print:hidden">
+          <Topbar usuario={usuario} onMenu={toggleMenu} onLogout={handleLogout} />
+        </div>
+        <main
+          id="contenido"
+          className="mx-auto max-w-[1220px] px-4 pt-6 pb-[100px] sm:px-6 sm:pb-16 lg:px-9 lg:pt-[38px] print:max-w-none print:p-0"
+        >
           <Outlet />
         </main>
       </div>
 
-      <BottomNav rol={usuario.rol} />
+      <div className="print:hidden">
+        <BottomNav rol={usuario.rol} />
+      </div>
     </>
   )
 }
