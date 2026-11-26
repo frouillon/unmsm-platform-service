@@ -58,4 +58,17 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
             @Param("areaId") Long areaId,
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta);
+
+    /** Solicitudes registradas en el rango [desde, hasta), opcionalmente de un área; base de los reportes. */
+    @EntityGraph(attributePaths = {"tecnico", "area", "categoria", "prioridad", "estado"})
+    @Query("""
+            select s from Solicitud s
+            where s.fechaCreacion >= :desde and s.fechaCreacion < :hasta
+              and (:areaId is null or s.area.id = :areaId)
+            order by s.fechaCreacion asc, s.id asc
+            """)
+    List<Solicitud> registradasEntre(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            @Param("areaId") Long areaId);
 }
