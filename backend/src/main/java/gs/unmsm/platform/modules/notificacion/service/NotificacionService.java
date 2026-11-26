@@ -27,6 +27,9 @@ public class NotificacionService {
     public static final String TIPO_CAMBIO_ESTADO = "CAMBIO_ESTADO";
     public static final String TIPO_ASIGNACION = "ASIGNACION";
     public static final String TIPO_COMENTARIO = "COMENTARIO";
+    public static final String TIPO_SLA_EN_RIESGO = "SLA_EN_RIESGO";
+    public static final String TIPO_SLA_VENCIDA = "SLA_VENCIDA";
+    public static final String TIPO_CONSOLIDADO_DIARIO = "CONSOLIDADO_DIARIO";
 
     private final NotificacionRepository notificaciones;
     private final Clock clock;
@@ -120,7 +123,7 @@ public class NotificacionService {
                 n.getId(),
                 n.getTipo(),
                 n.getMensaje(),
-                n.getSolicitud().getCodigo(),
+                n.getSolicitud() == null ? null : n.getSolicitud().getCodigo(),
                 Boolean.TRUE.equals(n.getLeida()),
                 n.getFechaCreacion());
     }

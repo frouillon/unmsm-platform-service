@@ -23,8 +23,9 @@ public class Notificacion {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "solicitud_id", nullable = false)
+    /** Null en avisos generales, como el consolidado diario del supervisor. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "solicitud_id")
     private Solicitud solicitud;
 
     @Column(name = "tipo", nullable = false, length = 50)

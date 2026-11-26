@@ -30,16 +30,21 @@ public class AjustesEsquema implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        UBICACION_OPCIONAL.forEach((columna, tipo) -> {
-            Integer obligatorias = jdbc.queryForObject("""
-                    select count(*) from information_schema.columns
-                    where table_schema = database() and table_name = 'solicitud'
-                      and column_name = ? and is_nullable = 'NO'
-                    """, Integer.class, columna);
-            if (obligatorias != null && obligatorias > 0) {
-                jdbc.execute("alter table solicitud modify " + columna + " " + tipo + " null");
-                log.info("Columna solicitud.{} ahora admite nulos.", columna);
-            }
-        });
+        UBICACION_OPCIONAL.forEach((columna, tipo) -> admitirNulos("solicitud", columna, tipo));
+        // El consolidado diario es un aviso general, sin solicitud asociada.
+        admitirNulos("notificacion", "solicitud_id", "bigint");
+    }
+
+    /** Tabla, columna y tipo son constantes de esta clase; nunca vienen del usuario. */
+    private void admitirNulos(String tabla, String columna, String tipo) {
+        Integer obligatorias = jdbc.queryForObject("""
+                select count(*) from information_schema.columns
+                where table_schema = database() and table_name = ?
+                  and column_name = ? and is_nullable = 'NO'
+                """, Integer.class, tabla, columna);
+        if (obligatorias != null && obligatorias > 0) {
+            jdbc.execute("alter table " + tabla + " modify " + columna + " " + tipo + " null");
+            log.info("Columna {}.{} ahora admite nulos.", tabla, columna);
+        }
     }
 }

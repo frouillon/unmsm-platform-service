@@ -132,6 +132,16 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<!-- En pruebas no corre el planificador: las alertas de SLA se prueban llamando al servicio. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<app.sla.alertas.habilitado>false</app.sla.alertas.habilitado>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 			<!-- Cobertura de pruebas: el reporte queda en target/site/jacoco/index.html tras "mvnw test". -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
