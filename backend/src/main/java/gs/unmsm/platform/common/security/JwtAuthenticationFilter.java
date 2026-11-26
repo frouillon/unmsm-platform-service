@@ -1,9 +1,11 @@
 package gs.unmsm.platform.common.security;
 
+import gs.unmsm.platform.common.observabilidad.MdcUsuario;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,6 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 var auth = UsernamePasswordAuthenticationToken.authenticated(
                         usuario, null, List.of(new SimpleGrantedAuthority("ROLE_" + usuario.rol())));
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                // El filtro de correlación limpia estas claves al terminar la petición.
+                MDC.put(MdcUsuario.USUARIO_ID, String.valueOf(usuario.id()));
+                MDC.put(MdcUsuario.ROL, usuario.rol());
             });
         }
         chain.doFilter(request, response);
