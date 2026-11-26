@@ -47,7 +47,7 @@ export function AppShell() {
     <>
       <a
         href="#contenido"
-        className="fixed -top-16 left-2 z-[100] rounded-md bg-ink px-3.5 py-2.5 font-semibold text-canvas focus:top-2"
+        className="fixed -top-16 left-2 z-[100] rounded-md bg-ink px-3.5 py-2.5 font-semibold text-canvas focus:top-2 print:hidden"
       >
         Saltar al contenido
       </a>

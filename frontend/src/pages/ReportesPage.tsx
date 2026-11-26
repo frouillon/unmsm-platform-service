@@ -131,6 +131,7 @@ export function ReportesPage() {
         )}
 
         <form
+          noValidate
           onSubmit={generar}
           aria-label="Filtros del reporte"
           className="mb-6 rounded-card border border-line bg-toolbar p-4 sm:p-5"
@@ -321,7 +322,7 @@ function ContenidoReporte({ data, detalleTo }: { data: ReporteSolicitudes; detal
             </section>
           )}
 
-          <section aria-labelledby="detalle-titulo">
+          <section aria-labelledby="detalle-titulo" className="print:break-before-page">
             <h2 id="detalle-titulo" className="mb-3 text-xl font-bold">
               Detalle de solicitudes
             </h2>
