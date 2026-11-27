@@ -1,5 +1,6 @@
 package gs.unmsm.platform.common.config;
 
+import gs.unmsm.platform.common.observabilidad.CorrelacionIdFilter;
 import gs.unmsm.platform.common.security.JwtAuthenticationFilter;
 import gs.unmsm.platform.common.security.JwtService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -48,8 +49,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers("/actuator/health", "/v3/api-docs.yaml", "/v3/api-docs/**",
-                                "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info",
+                                "/v3/api-docs.yaml", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Métricas (incluido el scrape de Prometheus) solo con token de administrador.
+                        .requestMatchers("/actuator/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated());
         return http.build();
@@ -61,7 +64,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", CorrelacionIdFilter.CABECERA));
+        config.setExposedHeaders(List.of(CorrelacionIdFilter.CABECERA, "Content-Disposition"));
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

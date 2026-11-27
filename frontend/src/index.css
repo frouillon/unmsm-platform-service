@@ -144,3 +144,17 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Vista PDF de los reportes: el navegador imprime solo el contenido, en A4 horizontal y con colores. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

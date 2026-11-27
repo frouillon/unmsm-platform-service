@@ -13,4 +13,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     @EntityGraph(attributePaths = {"rol", "area"})
     List<Usuario> findByRolNombreAndAreaIdAndActivoTrueOrderByNombresAsc(String rol, Long areaId);
+
+    @EntityGraph(attributePaths = {"rol", "area"})
+    List<Usuario> findByRolNombreAndActivoTrueOrderByNombresAsc(String rol);
 }

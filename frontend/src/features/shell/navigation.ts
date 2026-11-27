@@ -57,6 +57,7 @@ export const NAVIGATION: Record<Rol, RoleNavigation> = {
     items: [
       { to: '/admin', icon: 'home', label: 'Dashboard' },
       { to: '/admin/solicitudes', icon: 'list', label: 'Solicitudes' },
+      { to: '/admin/reportes', icon: 'chart', label: 'Reportes' },
       { to: '/admin/usuarios', icon: 'users', label: 'Usuarios' },
       { to: '/admin/roles', icon: 'shield', label: 'Roles' },
       { to: '/admin/categorias', icon: 'tag', label: 'Categorías' },

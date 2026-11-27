@@ -26,4 +26,13 @@ public interface HistorialEstadoRepository extends JpaRepository<HistorialEstado
             from HistorialEstado h where h.solicitud.id in :ids group by h.solicitud.id
             """)
     List<UltimoMovimiento> ultimosMovimientos(@Param("ids") Collection<Long> ids);
+
+    /** Primera vez que cada solicitud llegó a «Resuelto»: es la fecha de atención para MTTR y cumplimiento de SLA. */
+    @Query("""
+            select h.solicitud.id as solicitudId, min(h.fechaRegistro) as fecha
+            from HistorialEstado h
+            where h.solicitud.id in :ids and h.estadoDestino.nombre = 'Resuelto'
+            group by h.solicitud.id
+            """)
+    List<UltimoMovimiento> fechasDeResolucion(@Param("ids") Collection<Long> ids);
 }

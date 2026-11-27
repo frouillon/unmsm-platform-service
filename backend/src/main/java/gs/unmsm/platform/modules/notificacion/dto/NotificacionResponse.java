@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "Aviso in-app vinculado a una solicitud.")
+@Schema(description = "Aviso in-app; normalmente vinculado a una solicitud.")
 public record NotificacionResponse(
         @Schema(description = "Identificador.", example = "1")
         Long id,
@@ -15,7 +15,8 @@ public record NotificacionResponse(
         @Schema(description = "Texto del aviso.", example = "Tu solicitud SOL-2026-0001 pasó a En revisión.")
         String mensaje,
 
-        @Schema(description = "Código de la solicitud relacionada.", example = "SOL-2026-0001")
+        @Schema(description = "Código de la solicitud relacionada; null en avisos generales (consolidado diario).",
+                example = "SOL-2026-0001", nullable = true)
         String codigoSolicitud,
 
         @Schema(description = "Indica si ya fue leída.", example = "false")

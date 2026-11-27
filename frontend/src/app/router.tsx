@@ -14,6 +14,7 @@ import { MisSolicitudesPage } from '../pages/MisSolicitudesPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { NotificacionesPage } from '../pages/NotificacionesPage'
 import { NuevaSolicitudPage } from '../pages/NuevaSolicitudPage'
+import { ReportesPage } from '../pages/ReportesPage'
 import { SectionPlaceholder as Section } from '../pages/SectionPlaceholder'
 import { SolicitudesAdminPage } from '../pages/SolicitudesAdminPage'
 import { SolicitudesAreaPage } from '../pages/SolicitudesAreaPage'
@@ -56,15 +57,13 @@ export const router = createBrowserRouter([
               path: '/supervisor/tecnicos',
               element: <Section title="Técnicos" subtitle="Carga de trabajo del equipo de atención." icon="users" />,
             },
-            {
-              path: '/supervisor/reportes',
-              element: <Section title="Reportes" subtitle="Indicadores de desempeño del servicio." icon="chart" />,
-            },
+            { path: '/supervisor/reportes', element: <ReportesPage /> },
           ]),
           forRole('ADMINISTRADOR', [
             { path: '/admin', element: <InicioAdminPage /> },
             { path: '/admin/solicitudes', element: <SolicitudesAdminPage /> },
             { path: '/admin/solicitudes/:codigo', element: <DetalleSolicitudPage /> },
+            { path: '/admin/reportes', element: <ReportesPage /> },
             {
               path: '/admin/usuarios',
               element: <Section title="Usuarios" subtitle="Gestiona cuentas, roles y acceso al sistema." icon="users" />,

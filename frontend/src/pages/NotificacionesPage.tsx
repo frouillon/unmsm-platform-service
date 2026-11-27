@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
-import { Icon } from '../components/ui/Icon'
+import { Icon, type IconName } from '../components/ui/Icon'
 import { LoadError } from '../components/ui/LoadError'
 import { PageHeader } from '../components/ui/PageHeader'
 import { useAuth } from '../features/auth/useAuth'
+import { homePath } from '../features/auth/homePath'
 import { detalleSolicitudPath } from '../features/notificaciones/detallePath'
 import {
   fetchNotificaciones,
@@ -17,11 +18,17 @@ import { ApiError } from '../lib/api'
 import { haceTiempo } from '../lib/format'
 import { useApi } from '../lib/useApi'
 
-const TIPO_ICON: Record<string, 'refresh' | 'user' | 'mail'> = {
+const TIPO_ICON: Record<string, IconName> = {
   CAMBIO_ESTADO: 'refresh',
   ASIGNACION: 'user',
   COMENTARIO: 'mail',
+  SLA_EN_RIESGO: 'clock',
+  SLA_VENCIDA: 'alert',
+  CONSOLIDADO_DIARIO: 'chart',
 }
+
+/** Avisos de plazo: se destacan en rojo aunque ya estén leídos. */
+const TIPOS_URGENTES = new Set(['SLA_VENCIDA'])
 
 export function NotificacionesPage() {
   const { usuario } = useAuth()
@@ -58,7 +65,7 @@ export function NotificacionesPage() {
     <>
       <PageHeader
         title="Notificaciones"
-        subtitle="Avisos sobre el avance de tus solicitudes."
+        subtitle="Avisos sobre el avance de tus solicitudes y sus plazos."
         actions={
           noLeidas > 0 ? (
             <Button size="sm" onClick={leerTodas} disabled={marcando}>
@@ -89,7 +96,10 @@ export function NotificacionesPage() {
         {status === 'success' && data.length > 0 && usuario && (
           <ul className="divide-y divide-line-soft">
             {data.map((n) => {
-              const to = detalleSolicitudPath(usuario.rol, n.codigoSolicitud)
+              const to = n.codigoSolicitud
+                ? detalleSolicitudPath(usuario.rol, n.codigoSolicitud)
+                : homePath(usuario.rol)
+              const urgente = TIPOS_URGENTES.has(n.tipo)
               const icon = TIPO_ICON[n.tipo] ?? 'bell'
               return (
                 <li key={n.id}>
@@ -102,7 +112,11 @@ export function NotificacionesPage() {
                   >
                     <span
                       className={`mt-0.5 grid size-9 flex-none place-items-center rounded-lg ${
-                        n.leida ? 'bg-subtle-soft text-subtle' : 'bg-primary-soft text-primary'
+                        urgente
+                          ? 'bg-bad-soft text-bad'
+                          : n.leida
+                            ? 'bg-subtle-soft text-subtle'
+                            : 'bg-primary-soft text-primary'
                       }`}
                     >
                       <Icon name={icon} className="size-4" />
@@ -112,8 +126,12 @@ export function NotificacionesPage() {
                         {n.mensaje}
                       </span>
                       <span className="mt-0.5 flex flex-wrap gap-x-2 text-[11px] text-muted">
-                        <span>{n.codigoSolicitud}</span>
-                        <span aria-hidden>·</span>
+                        {n.codigoSolicitud && (
+                          <>
+                            <span>{n.codigoSolicitud}</span>
+                            <span aria-hidden>·</span>
+                          </>
+                        )}
                         <span>{haceTiempo(n.fecha)}</span>
                       </span>
                     </span>
