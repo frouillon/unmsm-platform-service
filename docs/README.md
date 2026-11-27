@@ -24,4 +24,4 @@ _(Pendiente de agregar en esta carpeta.)_
 
 ## Documentación transversal
 
-- Registro de uso de IA: _(Pendiente de agregar.)_
+- Registro de uso de IA: [`registro-uso-ia.md`](./registro-uso-ia.md)
